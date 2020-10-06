@@ -69,6 +69,9 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=0):
         for col, strategy in self.new_cols_strategies.items():
+            if col not in X.columns:  # 존재하지않는 컬럼은 skip합니다
+                continue
+            
             converting_col = X.loc[:, col]
             if strategy == 'LOG':
                 newcol = np.log(converting_col)
