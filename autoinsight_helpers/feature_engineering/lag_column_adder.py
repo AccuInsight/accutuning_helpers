@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
+import numpy as np
 
 
 class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
@@ -20,30 +21,37 @@ class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
                     if x != 0
                 ]
                 for i in lag_range:
-                    if i < self.row_size:
-                        tmp_col = pd.Series(X[target_col].shift(i))
+                    col_name = '{}_lag{}'.format(target_col, i)
+
+                    if target_col in X.columns:
+                        if i < self.row_size:
+                            tmp_col = pd.Series(X[target_col].shift(i))
+                        else:
+                            tmp_col = pd.Series(X[target_col]) # shift가 안 될 경우 그냥 해당 컬럼 추가 (predict할 때 컬럼 수 맞추기 위하여)
+
+                        filler = 'ffill' if i < 0 else 'bfill'
+                        tmp_col = tmp_col.fillna(method=filler)
+                        X.insert(
+                            X.columns.get_loc(target_col),
+                            col_name,
+                            tmp_col
+                        )
+                    else:
+                        X[col_name] = np.NaN
+            else:
+                col_name = '{}_lag{}'.format(target_col, self.lag)
+                if target_col in X.columns:
+                    if self.lag < self.row_size:
+                        tmp_col = pd.Series(X[target_col].shift(self.lag))
                     else:
                         tmp_col = pd.Series(X[target_col]) # shift가 안 될 경우 그냥 해당 컬럼 추가 (predict할 때 컬럼 수 맞추기 위하여)
-
-                    filler = 'ffill' if i < 0 else 'bfill'
+                    filler = 'ffill' if self.lag < 0 else 'bfill'
                     tmp_col = tmp_col.fillna(method=filler)
-                    col_name = '{}_lag{}'.format(target_col, i)
                     X.insert(
                         X.columns.get_loc(target_col),
                         col_name,
                         tmp_col
                     )
-            else:
-                if self.lag < self.row_size:
-                    tmp_col = pd.Series(X[target_col].shift(self.lag))
                 else:
-                    tmp_col = pd.Series(X[target_col]) # shift가 안 될 경우 그냥 해당 컬럼 추가 (predict할 때 컬럼 수 맞추기 위하여)
-                filler = 'ffill' if self.lag < 0 else 'bfill'
-                tmp_col = tmp_col.fillna(method=filler)
-                col_name = '{}_lag{}'.format(target_col, self.lag)
-                X.insert(
-                    X.columns.get_loc(target_col),
-                    col_name,
-                    tmp_col
-                )
+                    X[col_name] = np.NaN
         return X
