@@ -48,14 +48,14 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
             X.insert(idx + 6, cn + '_minute', X[cn].dt.minute)
             X.insert(idx + 7, cn + '_second', X[cn].dt.second)
             X.insert(idx + 8, cn + '_dayofweek', X[cn].dt.dayofweek)
-            X = X.drop(columns=[cn])
+            X.drop(columns=[cn], inplace=True)
 
         if self.convert_timestamp:
             X.loc[:, cn] = target_column.map(lambda x: time.mktime(
                 x.timetuple()
             ))
 
-        if (self.populate_features or self.convert_timestamp) is False:
+        if not self.populate_features and not self.convert_timestamp:
             X.loc[:, cn] = target_column
 
         return X
