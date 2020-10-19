@@ -25,6 +25,7 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
                 format=self.datetime_format,
                 errors='coerce'
             )
+            target_column = X.loc[:, cn]
         else:
             def _parse(x):
                 try:
@@ -36,6 +37,7 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
                     ret = datetime.fromtimestamp(0)
                 return ret
             X.loc[:, cn] = target_column.map(lambda x: _parse(x))
+            target_column = X.loc[:, cn]
         if self.populate_features:
             idx = X.columns.get_loc(cn)
             X.insert(idx + 1, cn + '_year', X[cn].dt.year)
@@ -44,15 +46,16 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
             X.insert(idx + 4, cn + '_day', X[cn].dt.day)
             X.insert(idx + 5, cn + '_hour', X[cn].dt.hour)
             X.insert(idx + 6, cn + '_minute', X[cn].dt.minute)
-            X.insert(idx + 7, cn + '_dayofweek', X[cn].dt.dayofweek)
-            X = X.drop(cn, axis=1)
+            X.insert(idx + 7, cn + '_second', X[cn].dt.second)
+            X.insert(idx + 8, cn + '_dayofweek', X[cn].dt.dayofweek)
+            X.drop(columns=[cn], inplace=True)
 
         if self.convert_timestamp:
-            X.loc[:, cn] = X.loc[:, cn].map(lambda x: time.mktime(
+            X.loc[:, cn] = target_column.map(lambda x: time.mktime(
                 x.timetuple()
             ))
 
-        if (self.populate_features and self.convert_timestamp) is False:
+        if not self.populate_features and not self.convert_timestamp:
             X.loc[:, cn] = target_column
 
         return X
