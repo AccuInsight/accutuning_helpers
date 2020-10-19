@@ -17,7 +17,6 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=0):
         cn = self.feature_name
-        target_column = X.loc[:, cn]
         # X.loc[:, col] = pd.to_datetime(converting_col, format='%Y-%m-%dT%H:%M:%SZ', errors='coerce')
         if self.datetime_format:
             X.loc[:, cn] = pd.to_datetime(
@@ -25,6 +24,7 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
                 format=self.datetime_format,
                 errors='coerce'
             )
+            target_column = X.loc[:, cn]
         else:
             def _parse(x):
                 try:
@@ -44,15 +44,16 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
             X.insert(idx + 4, cn + '_day', X[cn].dt.day)
             X.insert(idx + 5, cn + '_hour', X[cn].dt.hour)
             X.insert(idx + 6, cn + '_minute', X[cn].dt.minute)
-            X.insert(idx + 7, cn + '_dayofweek', X[cn].dt.dayofweek)
-            X = X.drop(cn, axis=1)
+            X.insert(idx + 7, cn + '_second', X[cn].dt.second)
+            X.insert(idx + 8, cn + '_dayofweek', X[cn].dt.dayofweek)
+            X = X.drop(columns=[cn])
 
         if self.convert_timestamp:
-            X.loc[:, cn] = X.loc[:, cn].map(lambda x: time.mktime(
+            X.loc[:, cn] = target_column.map(lambda x: time.mktime(
                 x.timetuple()
             ))
 
-        if (self.populate_features and self.convert_timestamp) is False:
+        if (self.populate_features or self.convert_timestamp) is False:
             X.loc[:, cn] = target_column
 
         return X
