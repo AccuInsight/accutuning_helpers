@@ -25,6 +25,7 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
                 format=self.datetime_format,
                 errors='coerce'
             )
+            target_column = X.loc[:, cn]
         else:
             def _parse(x):
                 try:
