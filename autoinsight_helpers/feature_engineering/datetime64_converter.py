@@ -17,6 +17,7 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=0):
         cn = self.feature_name
+        target_column = X.loc[:, cn]
         # X.loc[:, col] = pd.to_datetime(converting_col, format='%Y-%m-%dT%H:%M:%SZ', errors='coerce')
         if self.datetime_format:
             X.loc[:, cn] = pd.to_datetime(
