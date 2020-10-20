@@ -15,7 +15,7 @@ class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=0, **fit_params):
         for target_col in self.target_cols:
-            if self.lag2:
+            if self.lag2 is not None:
                 lag_range = [
                     int(x) for x in range(self.lag, self.lag2 + 1)
                     if x != 0
