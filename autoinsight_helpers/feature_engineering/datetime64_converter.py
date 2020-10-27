@@ -56,6 +56,6 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
             ))
 
         if not self.populate_features and not self.convert_timestamp:
-            X.loc[:, cn] = target_column
+            X.loc[:, cn] = target_column.astype('object')
 
         return X
