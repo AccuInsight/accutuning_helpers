@@ -23,6 +23,7 @@ class AutoinsightColumnLabelEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         if self.le and self.column_name in X.columns:
-            X.loc[:, self.column_name] = self.le.transform(X.loc[:, self.column_name])
-        return X
+            X_tr.loc[:, self.column_name] = self.le.transform(X.loc[:, self.column_name])
+        return X_tr
