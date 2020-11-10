@@ -38,24 +38,26 @@ class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
                 return ret
             X.loc[:, cn] = target_column.map(lambda x: _parse(x))
             target_column = X.loc[:, cn]
+
+        X_tr = X.copy()
         if self.populate_features:
             idx = X.columns.get_loc(cn)
-            X.insert(idx + 1, cn + '_year', X[cn].dt.year)
-            X.insert(idx + 2, cn + '_month', X[cn].dt.month)
-            X.insert(idx + 3, cn + '_week', X[cn].dt.week)
-            X.insert(idx + 4, cn + '_day', X[cn].dt.day)
-            X.insert(idx + 5, cn + '_hour', X[cn].dt.hour)
-            X.insert(idx + 6, cn + '_minute', X[cn].dt.minute)
-            X.insert(idx + 7, cn + '_second', X[cn].dt.second)
-            X.insert(idx + 8, cn + '_dayofweek', X[cn].dt.dayofweek)
-            X.drop(columns=[cn], inplace=True)
+            X_tr.insert(idx + 1, cn + '_year', X[cn].dt.year)
+            X_tr.insert(idx + 2, cn + '_month', X[cn].dt.month)
+            X_tr.insert(idx + 3, cn + '_week', X[cn].dt.week)
+            X_tr.insert(idx + 4, cn + '_day', X[cn].dt.day)
+            X_tr.insert(idx + 5, cn + '_hour', X[cn].dt.hour)
+            X_tr.insert(idx + 6, cn + '_minute', X[cn].dt.minute)
+            X_tr.insert(idx + 7, cn + '_second', X[cn].dt.second)
+            X_tr.insert(idx + 8, cn + '_dayofweek', X[cn].dt.dayofweek)
+            X_tr.drop(columns=[cn], inplace=True)
 
         if self.convert_timestamp:
-            X.loc[:, cn] = target_column.map(lambda x: time.mktime(
+            X_tr.loc[:, cn] = target_column.map(lambda x: time.mktime(
                 x.timetuple()
             ))
 
         if not self.populate_features and not self.convert_timestamp:
-            X.loc[:, cn] = target_column.astype('object')
+            X_tr.loc[:, cn] = target_column.astype('object')
 
-        return X
+        return X_tr

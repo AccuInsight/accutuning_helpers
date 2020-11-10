@@ -6,7 +6,7 @@ import dateutil.parser
 
 
 def datetime_intervals(X, datetime_col):
-    X.loc[:, datetime_col] = pd.to_datetime(X.loc[:, datetime_col])
+    X.loc[:, datetime_col] = pd.to_datetime(X.loc[:, datetime_col], errors='coerce')
     X = X.sort_values(by=datetime_col)
     intervals = (X[datetime_col] - X[datetime_col].shift(1)).dropna()
     if intervals.nunique() == 1:
@@ -50,16 +50,17 @@ class AutoinsightTimeseriesResample(BaseEstimator, TransformerMixin):
                         ret = datetime.fromtimestamp(0)
                     return ret
                 X.loc[:, self.datetime_col] = target_column.map(lambda x: _parse(x))
-        X.index = X.loc[:, self.datetime_col]
-        X = X.sort_index()
+        X_tr = X.copy()
+        X_tr.index = X_tr.loc[:, self.datetime_col]
+        X_tr = X_tr.sort_index()
         if self.fixed_interval:
             pass
         elif self.interval is None:
             self.interval = self.intervals.mode()[0]
-            X = X.resample(self.interval).mean()
+            X_tr = X_tr.resample(self.interval).mean()
         else:
-            X = X.resample(self.interval).mean()
-        return X
+            X_tr = X_tr.resample(self.interval).mean()
+        return X_tr
 
 
 # 일정한 간격으로 timeseries 데이터를 재배치하면서 결측값이 생기는 경우 Interpolate 합니다.
@@ -76,7 +77,7 @@ class AutoinsightTimeseriesInterpolate(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=0, **fit_params):
         if self.need_interpolation:
-            X = X.interpolate(method=self.method)
+            X_tr = X.interpolate(method=self.method)
         else:
-            pass
-        return X
+            X_tr = X.copy()
+        return X_tr
