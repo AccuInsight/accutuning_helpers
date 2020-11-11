@@ -81,7 +81,12 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
                 newcol = np.square(converting_col)
             # box-cox transformation, yeo-johnson transformation
             elif strategy == 'BOX_COX_TRANSFORMATION':
-                newcol, _ = stats.boxcox((converting_col + 1).astype(float))
+                try:
+                    newcol, _ = stats.boxcox((converting_col + 1).astype(float))
+                except ValueError:
+                    # https://stackoverflow.com/questions/62116192/valueerror-data-must-not-be-constant
+                    # prediction에서 row가 1개일때는 valueerror를 피할 수 없음.
+                    newcol = None
             elif strategy == 'YEO_JOHNSON_TRANSFORMATION':
                 newcol, _ = stats.yeojohnson(converting_col.astype(float))
             else:
