@@ -12,6 +12,7 @@ class AutoinsightNullImputerBycol(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         # impute_strategies는 column 순서대로 그에 해당하는 impute strategy list
         for col in self.strategies_dict:
             try:
@@ -26,23 +27,23 @@ class AutoinsightNullImputerBycol(BaseEstimator, TransformerMixin):
                 if strategy in ('NONE', '', None):
                     pass
                 elif strategy == 'DROP':
-                    X = X.dropna(how='any', subset=[col], axis=0)
+                    X_tr = X_tr.dropna(how='any', subset=[col], axis=0)
                 elif strategy == 'MOST_FREQUENT':
-                    X.loc[:, col] = X.loc[:, col].fillna(imputing_col.mode()[0])
+                    X_tr.loc[:, col] = X_tr.loc[:, col].fillna(imputing_col.mode()[0])
                 # categorical impute 방법
                 elif strategy == 'UNKNOWN':
-                    X.loc[:, col] = X.loc[:, col].fillna(value='Unknown')
+                    X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value='Unknown')
                 # numerical impute 방법
                 elif is_numeric_dtype(imputing_col):
                     if strategy == 'MEAN':
                         i_mean = imputing_col.mean()
-                        X.loc[:, col] = X.loc[:, col].fillna(value=i_mean)
+                        X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value=i_mean)
                     elif strategy == 'MEDIAN':
                         i_median = imputing_col.median()
-                        X.loc[:, col] = X.loc[:, col].fillna(value=i_median)
+                        X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value=i_median)
                     elif strategy == '0':
-                        X.loc[:, col] = X.loc[:, col].fillna(value=0)
+                        X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value=0)
                     elif strategy == 'MINIMUM':
                         i_min = imputing_col.min()
-                        X.loc[:, col] = X.loc[:, col].fillna(i_min)
-        return X
+                        X_tr.loc[:, col] = X_tr.loc[:, col].fillna(i_min)
+        return X_tr
