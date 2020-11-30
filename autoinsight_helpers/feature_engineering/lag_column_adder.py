@@ -14,6 +14,7 @@ class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0, **fit_params):
+        X_tr = X.copy()
         for target_col in self.target_cols:
             if self.lag2 is not None:
                 lag_range = [
@@ -25,33 +26,33 @@ class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
 
                     if target_col in X.columns:
                         if i < self.row_size:
-                            tmp_col = pd.Series(X[target_col].shift(i))
+                            tmp_col = pd.Series(X[target_col].shift(np.negative(i)))
                         else:
                             tmp_col = pd.Series(X[target_col]) # shift가 안 될 경우 그냥 해당 컬럼 추가 (predict할 때 컬럼 수 맞추기 위하여)
 
-                        filler = 'ffill' if i < 0 else 'bfill'
+                        filler = 'ffill' if i > 0 else 'bfill'
                         tmp_col = tmp_col.fillna(method=filler)
-                        X.insert(
+                        X_tr.insert(
                             X.columns.get_loc(target_col),
                             col_name,
                             tmp_col
                         )
                     else:
-                        X[col_name] = np.NaN
+                        X_tr[col_name] = np.NaN
             else:
                 col_name = '{}_lag{}'.format(target_col, self.lag)
                 if target_col in X.columns:
                     if self.lag < self.row_size:
-                        tmp_col = pd.Series(X[target_col].shift(self.lag))
+                        tmp_col = pd.Series(X[target_col].shift(np.negative(self.lag)))
                     else:
                         tmp_col = pd.Series(X[target_col]) # shift가 안 될 경우 그냥 해당 컬럼 추가 (predict할 때 컬럼 수 맞추기 위하여)
-                    filler = 'ffill' if self.lag < 0 else 'bfill'
+                    filler = 'ffill' if self.lag > 0 else 'bfill'
                     tmp_col = tmp_col.fillna(method=filler)
-                    X.insert(
+                    X_tr.insert(
                         X.columns.get_loc(target_col),
                         col_name,
                         tmp_col
                     )
                 else:
-                    X[col_name] = np.NaN
-        return X
+                    X_tr[col_name] = np.NaN
+        return X_tr

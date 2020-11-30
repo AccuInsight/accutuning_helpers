@@ -13,6 +13,7 @@ class AutoinsightCategoryConverter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         new_X = self.ohe.transform(X[[self.feature_name]])
         new_df = pd.DataFrame(new_X, columns=[
             self.feature_name + '_' + str(cn)
@@ -20,6 +21,6 @@ class AutoinsightCategoryConverter(BaseEstimator, TransformerMixin):
         ])
         target_idx = X.columns.get_loc(self.feature_name)
         for idx, (cn, cd) in enumerate(new_df.iteritems()):
-            X.insert(target_idx + idx + 1, cn, cd)
-
-        return X
+            X_tr.insert(target_idx + idx + 1, cn, cd)
+        X_tr.drop(columns=[self.feature_name], inplace=True)
+        return X_tr

@@ -67,6 +67,8 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        
+        X_tr = X.copy()
         for (col, strategy) in self.new_cols_strategies:
             if col not in X.columns:  # 존재하지않는 컬럼은 skip합니다
                 continue
@@ -92,5 +94,5 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
                 newcol = converting_col
 
             if newcol is not None:
-                X[col] = pd.Series(newcol)
-        return X
+                X_tr[col] = pd.Series(newcol)
+        return X_tr
