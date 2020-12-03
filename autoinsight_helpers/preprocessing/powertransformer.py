@@ -12,9 +12,8 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
         self.strategies = strategies
 
     def fit(self, X, y=0, **fit_params):
-        self.cols_strategies = dict(zip(X.columns, self.strategies))
         new_strategies = []
-        for col, strategy in self.cols_strategies.items():
+        for (col, strategy) in self.strategies:
             try:
                 converting_col = X.loc[:, col]
             except KeyError:
@@ -64,12 +63,13 @@ class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
                         new_strategies.append('NONE')
                 else:
                     new_strategies.append('NONE')
-        self.new_cols_strategies = dict(zip(X.columns, new_strategies))
+        self.new_cols_strategies = zip(X.columns, new_strategies)
         return self
 
     def transform(self, X, y=0):
+        
         X_tr = X.copy()
-        for col, strategy in self.new_cols_strategies.items():
+        for (col, strategy) in self.new_cols_strategies:
             if col not in X.columns:  # 존재하지않는 컬럼은 skip합니다
                 continue
             
