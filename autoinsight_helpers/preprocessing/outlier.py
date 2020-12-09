@@ -13,6 +13,7 @@ class AutoinsightOutlierBycol(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         for col in self.outlier_cols:
             try:
                 converting_col = X.loc[:, col]
@@ -26,15 +27,15 @@ class AutoinsightOutlierBycol(BaseEstimator, TransformerMixin):
                         q1 = converting_col.quantile(0.25)
                         q3 = converting_col.quantile(0.75)
                         IQR = q3 - q1
-                        X = X[(X[col] >= (q1 - 1.5 * IQR)) & (X[col] <= (q3 + 1.5 * IQR))]
+                        X_tr = X_tr[(X_tr[col] >= (q1 - 1.5 * IQR)) & (X_tr[col] <= (q3 + 1.5 * IQR))]
                 elif self.outlier_strategy == 'Z_SCORE':
                     if is_numeric_dtype(converting_col):
                         if self.outlier_threshold is None:
                             self.outlier_threshold = 3
                         z = (converting_col - converting_col.mean()) / converting_col.std()
-                        X = X.loc[(converting_col[(abs(z) <= self.outlier_threshold)]).index]
+                        X_tr = X_tr.loc[(converting_col[(abs(z) <= self.outlier_threshold)]).index]
                 else:
                     logging.critical(
                         'Not a proper method'
                     )
-        return X
+        return X_tr

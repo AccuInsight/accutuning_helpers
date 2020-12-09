@@ -13,6 +13,7 @@ class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         for (col, typ) in self.datatype_pair_match:
             try:
                 converting_col = X[col]
@@ -29,13 +30,13 @@ class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
                         pass
                     elif typ == 'float64':
                         # to_numeric으로 float 변환 안되는 것들을 NaN으로 치환 후 변환
-                        X[col] = pd.to_numeric(X[col], errors='coerce').astype(typ)
+                        X_tr[col] = pd.to_numeric(X[col], errors='coerce').astype(typ)
                     else:
                         try:
-                            X[col] = X[col].astype(typ)
+                            X_tr[col] = X[col].astype(typ)
                         except ValueError:
                             logging.critical(
                                 f'Failed to convert the datatype of column {col}.'
                             )
                             raise
-        return X
+        return X_tr

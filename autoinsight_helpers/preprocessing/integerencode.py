@@ -26,7 +26,8 @@ class AutoinsightIntegerEncode(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=0):
+        X_tr = X.copy()
         for col in self.columns_to_encode:
-            X.loc[:, col] = X.loc[:, col].fillna('NaN').apply(str)
-        X.loc[:, self.columns_to_encode] = self.oe.transform(X.loc[:, self.columns_to_encode])
-        return X
+            X_tr.loc[:, col] = X.loc[:, col].fillna('NaN').apply(str)
+        X_tr.loc[:, self.columns_to_encode] = self.oe.transform(X_tr.loc[:, self.columns_to_encode])
+        return X_tr
