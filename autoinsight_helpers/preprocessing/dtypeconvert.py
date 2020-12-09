@@ -21,6 +21,9 @@ class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
                     'No such column name in the dataset - dtype convert'
                 )
             else:
+                if typ == 'text':
+                    typ = 'object'
+
                 if str(converting_col.dtype) != typ:
                     if typ == 'datetime64':
                         pass
