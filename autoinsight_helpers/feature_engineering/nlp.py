@@ -52,13 +52,12 @@ class AutoinsightVectorizer(BaseEstimator, TransformerMixin):
 
 
 class AutoinsightLabeler(AutoinsightVectorizer):
-    def __init__(self, feature_name, classifier_fp, classifier_label_fp):
+    # def __init__(self, feature_name, classifier_fp, classifier_label_fp):
+    def __init__(self, feature_name, classifier, classifier_labels):
         super().__init__(feature_name)
 
-        self.classifier_fp = pathlib.Path(classifier_fp)
-        self.classifier = pickle.loads(self.classifier_fp.read_bytes())
-        self.classifier_label_fp = pathlib.Path(classifier_label_fp)
-        self.labels = pickle.loads(self.classifier_label_fp.read_bytes())
+        self.classifier = classifier
+        self.labels = classifier_labels
 
     def transform(self, X, y=0):
         vector_df = self._vectorize(X)
