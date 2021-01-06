@@ -23,9 +23,10 @@ class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
                 )
             else:
                 if typ == 'text':
-                    typ = 'object'
-
-                if str(converting_col.dtype) != typ:
+                    from autoinsight_helpers.feature_engineering.nlp import AutoinsightVectorizer
+                    vec = AutoinsightVectorizer(feature_name=col)
+                    X_tr = vec.fit_transform(X_tr)
+                elif str(converting_col.dtype) != typ:
                     if typ == 'datetime64':
                         pass
                     elif typ == 'float64':
