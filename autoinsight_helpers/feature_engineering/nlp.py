@@ -53,11 +53,12 @@ class AutoinsightVectorizer(BaseEstimator, TransformerMixin):
 
 class AutoinsightLabeler(AutoinsightVectorizer):
     # def __init__(self, feature_name, classifier_fp, classifier_label_fp):
-    def __init__(self, feature_name, classifier, classifier_labels):
+    def __init__(self, feature_name, classifier, classifier_labels, append_vectors=False):
         super().__init__(feature_name)
 
         self.classifier = classifier
         self.labels = classifier_labels
+        self.append_vectors = append_vectors
 
     def transform(self, X, y=0):
         vector_df = self._vectorize(X)
@@ -71,7 +72,13 @@ class AutoinsightLabeler(AutoinsightVectorizer):
             columns=[self.feature_name + '__tag']
         )
         X = X.drop(self.feature_name, axis=1)
-        return pd.concat(
-            [X, vector_df, tag_df],
-            axis=1
-        )
+        if self.append_vectors:
+            return pd.concat(
+                [X, vector_df, tag_df],
+                axis=1
+            )
+        else:
+            return pd.concat(
+                [X, tag_df],
+                axis=1
+            )
