@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 
-class AutoinsightLagColumnAdder(BaseEstimator, TransformerMixin):
+class AccutuningLagColumnAdder(BaseEstimator, TransformerMixin):
     def __init__(self, target_cols=None, lag=None, lag2=None):
         self.target_cols = target_cols
         self.lag = lag

@@ -1,5 +1,5 @@
-from .onehotencoder import AutoinsightOneHotEncoder  # noqa
-from .datetime64_converter import AutoinsightDatetime64Converter  # noqa
-from .category_converter import AutoinsightCategoryConverter  # noqa
-from .timeseries import AutoinsightTimeseriesResample, AutoinsightTimeseriesInterpolate # noqa
-from .lag_column_adder import AutoinsightLagColumnAdder  # noqa
+from .onehotencoder import AccutuningOneHotEncoder  # noqa
+from .datetime64_converter import AccutuningDatetime64Converter  # noqa
+from .category_converter import AccutuningCategoryConverter  # noqa
+from .timeseries import AccutuningTimeseriesResample, AccutuningTimeseriesInterpolate # noqa
+from .lag_column_adder import AccutuningLagColumnAdder  # noqa

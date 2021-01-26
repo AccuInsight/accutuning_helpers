@@ -3,7 +3,7 @@ from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 
 
-class AutoinsightCategoryConverter(BaseEstimator, TransformerMixin):
+class AccutuningCategoryConverter(BaseEstimator, TransformerMixin):
     def __init__(self, feature_name):
         self.feature_name = feature_name
         self.ohe = OneHotEncoder(sparse=False)

@@ -6,7 +6,7 @@ import pandas as pd
 from scipy import stats
 
 
-class AutoinsightColTransformation(BaseEstimator, TransformerMixin):
+class AccutuningColTransformation(BaseEstimator, TransformerMixin):
     def __init__(self, strategies):
         # self.trans_cols = trans_cols
         self.strategies = strategies

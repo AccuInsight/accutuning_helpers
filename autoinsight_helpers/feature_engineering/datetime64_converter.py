@@ -5,7 +5,7 @@ import pandas as pd
 import dateutil.parser
 
 
-class AutoinsightDatetime64Converter(BaseEstimator, TransformerMixin):
+class AccutuningDatetime64Converter(BaseEstimator, TransformerMixin):
     def __init__(self, feature_name, datetime_format=None, populate_features=False, convert_timestamp=False):
         self.feature_name = feature_name
         self.datetime_format = datetime_format

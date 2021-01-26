@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import OrdinalEncoder
 
 
-class AutoinsightIntegerEncode(BaseEstimator, TransformerMixin):
+class AccutuningIntegerEncode(BaseEstimator, TransformerMixin):
     def __init__(self):
         self.oe = OrdinalEncoder()
         self.columns_to_encode = list()

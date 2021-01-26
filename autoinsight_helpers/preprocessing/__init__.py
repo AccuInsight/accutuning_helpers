@@ -1,8 +1,8 @@
-from .columnselector import AutoinsightColumnSelector  # noqa
-from .columnlabeler import AutoinsightColumnLabelEncoder  # noqa
-from .integerencode import AutoinsightIntegerEncode  # noqa
-from .dtypeconvert import AutoinsightDtypeConvert  # noqa
-from .nullimputer import AutoinsightNullImputerBycol  # noqa
-from .outlier import AutoinsightOutlierBycol  # noqa
-from .powertransformer import AutoinsightColTransformation  # noqa
-from .sampler import AutoinsightSampler  # noqa
+from .columnselector import AccutuningColumnSelector  # noqa
+from .columnlabeler import AccutuningColumnLabelEncoder  # noqa
+from .integerencode import AccutuningIntegerEncode  # noqa
+from .dtypeconvert import AccutuningDtypeConvert  # noqa
+from .nullimputer import AccutuningNullImputerBycol  # noqa
+from .outlier import AccutuningOutlierBycol  # noqa
+from .powertransformer import AccutuningColTransformation  # noqa
+from .sampler import AccutuningSampler  # noqa

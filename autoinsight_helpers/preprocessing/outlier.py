@@ -3,7 +3,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 import logging
 
 
-class AutoinsightOutlierBycol(BaseEstimator, TransformerMixin):
+class AccutuningOutlierBycol(BaseEstimator, TransformerMixin):
     def __init__(self, outlier_cols, outlier_strategy, outlier_threshold=None):
         self.outlier_cols = outlier_cols
         self.outlier_strategy = outlier_strategy

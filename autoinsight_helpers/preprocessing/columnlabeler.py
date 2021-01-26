@@ -3,7 +3,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.multiclass import type_of_target
 
 
-class AutoinsightColumnLabelEncoder(BaseEstimator, TransformerMixin):
+class AccutuningColumnLabelEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, column_name):
         self.column_name = column_name
         self.le = None

@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 
 
-class AutoinsightSampler(BaseEstimator, TransformerMixin):
+class AccutuningSampler(BaseEstimator, TransformerMixin):
     def __init__(self, sample=0, epochs=5, discrete_columns=None, target_column=None, use_class_balancer = False):
         self.sample = sample
         self.epochs = epochs

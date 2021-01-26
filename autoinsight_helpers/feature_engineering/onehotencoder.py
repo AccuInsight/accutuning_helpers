@@ -5,7 +5,7 @@ from .onehotencoder_support import OneHotEncoder as OneHotEncoder_
 import numpy as np
 
 
-class AutoinsightOneHotEncoder(BaseEstimator, TransformerMixin):
+class AccutuningOneHotEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, use_minimum_fraction=True, minimum_fraction=0.01,
                  categorical_features=None, random_state=None):
 

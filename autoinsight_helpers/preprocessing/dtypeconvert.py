@@ -3,7 +3,7 @@ import pandas as pd
 import logging
 
 
-class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
+class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
     # preprocessor 화면에서 Type 받아서 변환하는 class
 
     def __init__(self, datatype_pair_match):
@@ -23,8 +23,8 @@ class AutoinsightDtypeConvert(BaseEstimator, TransformerMixin):
                 )
             else:
                 if typ == 'text':
-                    from autoinsight_helpers.feature_engineering.nlp import AutoinsightVectorizer
-                    vec = AutoinsightVectorizer(feature_name=col)
+                    from accutuning_helpers.feature_engineering.nlp import AccutuningVectorizer
+                    vec = AccutuningVectorizer(feature_name=col)
                     X_tr = vec.fit_transform(X_tr)
                 elif str(converting_col.dtype) != typ:
                     if typ == 'datetime64':

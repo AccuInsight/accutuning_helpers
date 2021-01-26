@@ -3,7 +3,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 import logging
 
 
-class AutoinsightNullImputerBycol(BaseEstimator, TransformerMixin):
+class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
     def __init__(self, impute_strategies):
         self.impute_strategies = impute_strategies
 

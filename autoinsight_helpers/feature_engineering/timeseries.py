@@ -17,7 +17,7 @@ def datetime_intervals(X, datetime_col):
 
 
 # datetime이 있는 데이터를 일정한 간격으로 resample 합니다.
-class AutoinsightTimeseriesResample(BaseEstimator, TransformerMixin):
+class AccutuningTimeseriesResample(BaseEstimator, TransformerMixin):
     def __init__(self, datetime_col, datetime_format=None, interval=None):
         self.datetime_col = datetime_col
         self.datetime_format = datetime_format
@@ -64,7 +64,7 @@ class AutoinsightTimeseriesResample(BaseEstimator, TransformerMixin):
 
 
 # 일정한 간격으로 timeseries 데이터를 재배치하면서 결측값이 생기는 경우 Interpolate 합니다.
-class AutoinsightTimeseriesInterpolate(BaseEstimator, TransformerMixin):
+class AccutuningTimeseriesInterpolate(BaseEstimator, TransformerMixin):
     def __init__(self, method='linear'):
         self.method = method
 

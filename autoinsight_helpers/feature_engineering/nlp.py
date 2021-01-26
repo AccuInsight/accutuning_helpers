@@ -10,7 +10,7 @@ import pathlib
 import pickle
 
 
-class AutoinsightVectorizer(BaseEstimator, TransformerMixin):
+class AccutuningVectorizer(BaseEstimator, TransformerMixin):
     def __init__(self, feature_name):
         self.feature_name = feature_name
 
@@ -51,7 +51,7 @@ class AutoinsightVectorizer(BaseEstimator, TransformerMixin):
         )
 
 
-class AutoinsightLabeler(AutoinsightVectorizer):
+class AccutuningLabeler(AccutuningVectorizer):
     # def __init__(self, feature_name, classifier_fp, classifier_label_fp):
     def __init__(self, feature_name, classifier, classifier_labels, append_vectors=False):
         super().__init__(feature_name)

@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-class AutoinsightColumnSelector(BaseEstimator, TransformerMixin):
+class AccutuningColumnSelector(BaseEstimator, TransformerMixin):
     def __init__(self, column_names):
         self.column_names = column_names
 
