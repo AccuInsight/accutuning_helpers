@@ -3,9 +3,10 @@ from .ordinalencoder_tmp import OrdinalEncoder
 
 
 class AccutuningIntegerEncode(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        self.oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
+    def __init__(self, unknown_value=-1):
         self.columns_to_encode = list()
+        self.unknown_value = unknown_value
+        self.oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=self.unknown_value)
 
     def fit(self, X, y=0, **fit_params):
         self.columns_to_encode = list(
