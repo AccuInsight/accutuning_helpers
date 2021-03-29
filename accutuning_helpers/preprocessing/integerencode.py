@@ -1,10 +1,10 @@
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import OrdinalEncoder
+from .ordinalencoder_tmp import OrdinalEncoder
 
 
 class AccutuningIntegerEncode(BaseEstimator, TransformerMixin):
     def __init__(self):
-        self.oe = OrdinalEncoder()
+        self.oe = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
         self.columns_to_encode = list()
 
     def fit(self, X, y=0, **fit_params):
