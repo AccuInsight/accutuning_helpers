@@ -28,7 +28,7 @@ class AccutuningOutlierBycol(BaseEstimator, TransformerMixin):
                         q3 = converting_col.quantile(0.75)
                         IQR = q3 - q1
                         X_tr = X_tr[(X_tr[col] >= (q1 - 1.5 * IQR)) & (X_tr[col] <= (q3 + 1.5 * IQR))]
-                        deleted = X_tr.shape[0] - len([(X_tr[col] >= (q1 - 1.5 * IQR)) & (X_tr[col] <= (q3 + 1.5 * IQR))])
+                        deleted = X_tr.shape[0] - sum((X_tr[col] >= (q1 - 1.5 * IQR)) & (X_tr[col] <= (q3 + 1.5 * IQR)))
                         logging.debug(f'AccutuningOutlierBycol: {deleted} rows deleted for column {col}')
                 elif self.outlier_strategy == 'Z_SCORE':
                     if is_numeric_dtype(converting_col):
@@ -36,7 +36,7 @@ class AccutuningOutlierBycol(BaseEstimator, TransformerMixin):
                             self.outlier_threshold = 3
                         z = (X_tr[col] - converting_col.mean()) / converting_col.std()
                         X_tr = X_tr[abs(z) <= self.outlier_threshold]
-                        deleted = sum([abs(z) > self.outlier_threshold])
+                        deleted = sum(abs(z) > self.outlier_threshold)
                         logging.debug(f'AccutuningOutlierBycol: {deleted} rows deleted for column {col}')
                 else:
                     logging.critical(
