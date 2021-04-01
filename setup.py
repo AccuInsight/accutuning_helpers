@@ -1,7 +1,7 @@
 from setuptools import setup, find_namespace_packages
 setup(
     name="accutuning_helpers",
-    version="1.0.19",
+    version="1.0.20",
     packages=find_namespace_packages(),
     include_package_data=True,
 )
