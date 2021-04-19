@@ -41,7 +41,7 @@ class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
                     elif strategy == 'MEDIAN':
                         i_median = imputing_col.median()
                         X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value=i_median)
-                    elif strategy == '0':
+                    elif strategy == 'ZERO':
                         X_tr.loc[:, col] = X_tr.loc[:, col].fillna(value=0)
                     elif strategy == 'MINIMUM':
                         i_min = imputing_col.min()
