@@ -6,21 +6,21 @@ import pandas as pd
 class AccutuningCategoryConverter(BaseEstimator, TransformerMixin):
     def __init__(self, feature_name):
         self.feature_name = feature_name
-        self.ohe = OneHotEncoder(sparse=False)
+        self.ohe = OneHotEncoder(sparse=False, handle_unknown='ignore')
 
     def fit(self, X, y=0, **fit_params):
         self.ohe.fit(X[[self.feature_name]], y)
         return self
 
     def transform(self, X, y=0):
-        X_tr = X.copy()
+        self.target_idx = X.columns.get_loc(self.feature_name)
+        self.X_front = X.columns[:self.target_idx]
+        self.X_back = X.columns[self.target_idx + 1:]
         new_X = self.ohe.transform(X[[self.feature_name]])
         new_df = pd.DataFrame(new_X, columns=[
             self.feature_name + '_' + str(cn)
             for cn in self.ohe.categories_[0]
         ])
-        target_idx = X.columns.get_loc(self.feature_name)
-        for idx, (cn, cd) in enumerate(new_df.iteritems()):
-            X_tr.insert(target_idx + idx + 1, cn, cd)
-        X_tr.drop(columns=[self.feature_name], inplace=True)
+        new_df.index = X.index
+        X_tr = pd.concat([X[self.X_front], new_df, X[self.X_back]], axis=1)
         return X_tr
