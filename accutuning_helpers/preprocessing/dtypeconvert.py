@@ -37,7 +37,6 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
                             X_tr[col] = X[col].astype(typ)
                         except ValueError:
                             logging.critical(
-                                f'Failed to convert the datatype of column {col}.'
+                                f'Failed to convert the datatype of column {col} to {str(typ)}. Set to default.'
                             )
-                            raise
         return X_tr
