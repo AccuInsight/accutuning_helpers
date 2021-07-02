@@ -81,3 +81,49 @@ class AccutuningTimeseriesInterpolate(BaseEstimator, TransformerMixin):
         else:
             X_tr = X.copy()
         return X_tr
+
+
+# 지정한 Window size와 Moving Average 방식대로 이동평균 컬럼을 추가합니다.
+class AccutuningMovingAverage(BaseEstimator, TransformerMixin):
+    """
+    [(colname1, 5, 'ma'), (colname1, 10, 'ema'), (colname2, 5, 'ema')]
+    """
+    def __init__(self, how):
+        self.how = how
+
+    def fit(self, X, y=0, **fit_params):
+        self.newcols_dict = {}
+
+        for i in self.how:
+            col, window, method = i[0], i[1], i[2]
+
+            try:
+                if method == 'ma':
+                    newcol = X[col].rolling(window).mean()
+                elif method == 'ema':
+                    newcol = X[col].ewm(window).mean()
+
+                colname = str(col) + '_' + str(window) + '_' + str(method)
+                newcol.name = colname
+
+                if col in self.newcols_dict.keys():
+                    self.newcols_dict[col].append(newcol)
+                else:
+                    self.newcols_dict[col] = []
+                    self.newcols_dict[col].append(newcol)
+
+            except Exception as e:
+                pass
+
+        return self
+
+    def transform(self, X, y=0, **fit_params):
+        X_tr = X.copy()
+        for i in self.newcols_dict.keys():
+            target_idx = X.columns.get_loc(i)
+            X_front = X_tr.columns[:target_idx + 1]
+            X_back = X_tr.columns[target_idx + 1:]
+            converted = pd.concat(self.newcols_dict[i], axis=1)
+            X_tr = pd.concat([X_tr[X_front], converted, X_tr[X_back]], axis=1)
+        X_tr = X_tr.dropna()
+        return X_tr
