@@ -6,7 +6,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "numpy==1.18.1",
-        "pandas==0.25.3",
+        "pandas==1.1.4",
         "scikit-learn==0.22.1",
         "scipy==1.4.1",
         "joblib==0.16.0",
