@@ -30,5 +30,5 @@ class AccutuningIntegerEncode(BaseEstimator, TransformerMixin):
         X_tr = X.copy()
         for col in self.columns_to_encode:
             X_tr.loc[:, col] = X.loc[:, col].fillna('NaN').apply(str)
-        X_tr.loc[:, self.columns_to_encode] = self.oe.transform(X_tr.loc[:, self.columns_to_encode])
+        X_tr.loc[:, self.columns_to_encode] = self.oe.transform(X_tr.loc[:, self.columns_to_encode]).astype('object')
         return X_tr
