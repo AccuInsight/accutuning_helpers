@@ -1,7 +1,10 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 
-
+##########################################################################
+# CTGAN을 기반으로 데이터를 Augmentation 하여 새로운 데이터셋을 제공합니다.
+# use_class_balancer일 경우 target_column의 각 class 별 row 수를 맞춥니다.
+##########################################################################
 class AccutuningSampler(BaseEstimator, TransformerMixin):
     def __init__(self, sample=0, epochs=5, discrete_columns=None, target_column=None, use_class_balancer = False):
         self.sample = sample

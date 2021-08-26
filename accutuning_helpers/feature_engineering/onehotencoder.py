@@ -4,7 +4,11 @@ from .onehotencoder_support import OneHotEncoder as OneHotEncoder_
 
 import numpy as np
 
-
+##########################################################################
+# 전체 categorical_features에 대하여 One Hot Encoding을 실시합니다.
+# Advanced Settings의 One Hot Encoding을 True로 설정할 경우 사용됩니다.
+# 사용자가 지정한 Column에 대해서만 OHE를 실시하는 AccutuningCategoryConverter와는 구분됩니다.
+##########################################################################
 class AccutuningOneHotEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, use_minimum_fraction=True, minimum_fraction=0.01,
                  categorical_features=None, random_state=None):

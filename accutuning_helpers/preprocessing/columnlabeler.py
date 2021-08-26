@@ -2,7 +2,9 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.multiclass import type_of_target
 
-
+##########################################################################
+# Classification 문제에 해당할 경우 Target column을 int로 변환합니다.
+##########################################################################
 class AccutuningColumnLabelEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, column_name):
         self.column_name = column_name

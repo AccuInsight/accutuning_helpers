@@ -2,7 +2,12 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
 
-
+##########################################################################
+# 선택된 Column에 대하여 Lag Columns를 생성하여 추가합니다.
+# lag만 제공될 경우 해당하는 단일 lag column을 생성하고, 
+# lag, lag2 모두 제공될 경우 lag ~ lag2 범위에 해당하는 lag columns를 생성합니다.
+# lag 값이 양수일 경우에는 컬럼 값을 아래로 내려 과거를 나타내고, 음수일 경우에는 위로 올려 미래를 나타냅니다. (pandas shift 참조)
+##########################################################################
 class AccutuningLagColumnAdder(BaseEstimator, TransformerMixin):
     def __init__(self, target_cols=None, lag=None, lag2=None):
         self.target_cols = target_cols

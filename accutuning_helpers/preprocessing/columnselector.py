@@ -1,6 +1,8 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-
+##########################################################################
+# column_names에 해당하는 Columns만 필터링합니다.
+##########################################################################
 class AccutuningColumnSelector(BaseEstimator, TransformerMixin):
     def __init__(self, column_names):
         self.column_names = column_names

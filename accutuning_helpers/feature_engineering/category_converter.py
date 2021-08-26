@@ -2,7 +2,10 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 
-
+##########################################################################
+# feature_name column에 대하여 One Hot Encoding을 실시합니다.
+# 선택된 column 마다 한번씩 해당 class를 사용하여 transform을 진행합니다.
+##########################################################################
 class AccutuningCategoryConverter(BaseEstimator, TransformerMixin):
     def __init__(self, feature_name):
         self.feature_name = feature_name

@@ -1,7 +1,10 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from .ordinalencoder_tmp import OrdinalEncoder
 
-
+##########################################################################
+# DataFrame 내 Category나 String column일 경우 해당 column들은 Integer로 변환합니다.
+# train set에서 없었던 값일 경우 transform 시에 unknown_value (기본값=-1)로 대체됩니다.
+##########################################################################
 class AccutuningIntegerEncode(BaseEstimator, TransformerMixin):
     def __init__(self, unknown_value=-1):
         self.columns_to_encode = list()
