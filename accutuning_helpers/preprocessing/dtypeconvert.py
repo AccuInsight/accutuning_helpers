@@ -2,10 +2,10 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import logging
 
-
+##########################################################################
+# preprocessor 화면에서 받은 datatype_pair_match에 따라서 각 column들의 datatype을 변경합니다.
+##########################################################################
 class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
-    # preprocessor 화면에서 Type 받아서 변환하는 class
-
     def __init__(self, datatype_pair_match):
         self.datatype_pair_match = datatype_pair_match
 

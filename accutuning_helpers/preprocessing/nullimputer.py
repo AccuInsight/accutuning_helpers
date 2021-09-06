@@ -2,7 +2,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.dtypes.common import is_numeric_dtype
 import logging
 
-
+##########################################################################
+# column 순서대로 제공되는 impute_strategies에 따라 결측값을 대체합니다.
+# fit에서 train set으로부터 결측값을 대체할 imputing_values를 추출하고,
+# transform에서 strategy에 해당하는 방법에 따라 결측값을 처리합니다. 
+##########################################################################
 class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
     def __init__(self, impute_strategies):
         self.impute_strategies = impute_strategies

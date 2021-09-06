@@ -5,7 +5,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-
+##########################################################################
+# Column 순서대로 제시되는 strategies에 따라 feature transformation을 실시합니다.
+# 각 Strategy에 따라 변환 가능한 데이터의 제한이 존재하고, 이럴 경우 다른 strategy로 변경됩니다.
+##########################################################################
 class AccutuningColTransformation(BaseEstimator, TransformerMixin):
     def __init__(self, strategies):
         # self.trans_cols = trans_cols

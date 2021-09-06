@@ -2,7 +2,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.dtypes.common import is_numeric_dtype
 import logging
 
-
+##########################################################################
+# outlier_cols에 해당되는 columns에 대하여 Outlier 제거를 실시합니다.
+# BOX_PLOT_RULE, Z_SCORE 두 가지 방법을 선택할 수 있습니다.
+# fitted는 기능이 전처리 과정에서만 작동하고, test set이 해당 클래스를 거치며 row를 지우는 일이 없도록 하는 역할을 수행합니다.
+##########################################################################
 class AccutuningOutlierBycol(BaseEstimator, TransformerMixin):
     def __init__(self, outlier_cols, outlier_strategy, outlier_threshold=None, fitted=False):
         self.outlier_cols = outlier_cols
