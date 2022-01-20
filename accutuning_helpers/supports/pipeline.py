@@ -16,22 +16,22 @@ import numpy as np
 from scipy import sparse
 from joblib import Parallel
 
-from .base import clone, TransformerMixin
-from .preprocessing import FunctionTransformer
-from .utils._estimator_html_repr import _VisualBlock
-from .utils.metaestimators import available_if
-from .utils import (
+from sklearn.base import clone, TransformerMixin
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils._estimator_html_repr import _VisualBlock
+from sklearn.utils.metaestimators import available_if
+from sklearn.utils import (
     Bunch,
     _print_elapsed_time,
 )
-from .utils.deprecation import deprecated
-from .utils._tags import _safe_tags
-from .utils.validation import check_memory
-from .utils.validation import check_is_fitted
-from .utils.fixes import delayed
-from .exceptions import NotFittedError
+from sklearn.utils.deprecation import deprecated
+from sklearn.utils._tags import _safe_tags
+from sklearn.utils.validation import check_memory
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.fixes import delayed
+from sklearn.exceptions import NotFittedError
 
-from .utils.metaestimators import _BaseComposition
+from sklearn.utils.metaestimators import _BaseComposition
 
 __all__ = ["Pipeline", "FeatureUnion", "make_pipeline", "make_union"]
 
