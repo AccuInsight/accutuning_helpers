@@ -11,7 +11,7 @@ setup(
         "scipy==1.7.2",
         "joblib==1.1.0",
         "python-dateutil==2.8.2",
-        "ctgan==0.5.0",
+        # "ctgan==0.5.0",
         "sentence-transformers==0.3.9",
     ]
 )
