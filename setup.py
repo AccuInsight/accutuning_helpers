@@ -12,6 +12,6 @@ setup(
         "joblib==1.1.0",
         "python-dateutil==2.8.2",
         # "ctgan==0.5.0",
-        "sentence-transformers==0.3.9",
+        "sentence-transformers",
     ]
 )
