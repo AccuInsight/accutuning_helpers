@@ -6,6 +6,7 @@ from sklearn.neighbors import KNeighborsRegressor,KNeighborsClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 import xgboost as xgb 
 import lightgbm as lgb
+import pandas as pd
 
 class Model_Imputer:
     """
