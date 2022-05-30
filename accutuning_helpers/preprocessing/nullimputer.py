@@ -7,10 +7,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 import xgboost as xgb 
 import lightgbm as lgb
 import pandas as pd
-<<<<<<< HEAD
-=======
 
->>>>>>> 231bb55ae142942fef46eeadf47f3cd1bca92e2b
 
 class Model_Imputer:
     """
