@@ -13,5 +13,8 @@ setup(
         "python-dateutil==2.8.2",
         "ctgan==0.4.3",
         "sentence-transformers==0.3.9",
+        "protobuf==3.20.0",
+        "xgbootst==1.5.0",
+        "lightgbm>=2.3.1"
     ]
 )
