@@ -8,6 +8,7 @@ import xgboost as xgb
 import lightgbm as lgb
 import pandas as pd
 
+
 class Model_Imputer:
     """
     Parameters
@@ -37,7 +38,6 @@ class Model_Imputer:
         self.regressor = self.models[method][1]
         self.initial_guess = initial_guess
         self.n_iter = n_iter
-        print(method, self.classifier, self.regressor)
 
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
