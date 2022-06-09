@@ -16,5 +16,7 @@ setup(
         "protobuf==3.20.0",
         "xgboost==1.5.0",
         "lightgbm>=2.3.1"
+        "flair==0.11.3",
+        "konlpy==0.6",
     ]
 )
