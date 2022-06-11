@@ -12,11 +12,17 @@ setup(
         "joblib==1.1.0",
         "python-dateutil==2.8.2",
         "ctgan==0.4.3",
-        "sentence-transformers==0.3.9",
-        "protobuf==3.20.0",
         "xgboost==1.5.0",
         "lightgbm>=2.3.1"
-        "flair==0.11.3",
+        # text added
         "konlpy==0.6",
+        "customized_konlpy",
+        "tweepy>=3.7.0",
+        "langid>=1.1.6",
+        "cleanlab>=1.0",
+        "flair==0.11.3",
+        "sentencepiece>=0.1.95"
+        # "sentence-transformers==0.3.9",
+        # "protobuf==3.20.0",
     ]
 )
