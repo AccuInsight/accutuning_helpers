@@ -1,9 +1,10 @@
 import logging
+import re
 from typing import List, Tuple, Set, Union
 
-from konlpy.tag import Okt, Komoran, Mecab, Hannanum, Kkma
-
+from ckonlpy.tag import Twitter
 from flair.data import Tokenizer
+from konlpy.tag import Okt, Komoran, Mecab, Hannanum, Kkma
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ NEG_FILTER_POS = {
 	"J",  # (Ending Particle)
 	"JKS",  # (Josa)
 	"JKB",  # (Junction)
-	"JX", 	# (Junction)
+	"JX",  # (Junction)
 	"MM",  # (Modifier)
 	"SP",  # (Space)
 	"SSC",  # (Closing brackets)
@@ -30,6 +31,7 @@ NEG_FILTER_POS = {
 	"VCN",  # (Negative designator)
 	"VCP"  # (Positive designator)
 }
+
 
 # 임시로 지정
 
@@ -88,11 +90,26 @@ class KonlpyTokenizer(Tokenizer):
 		return self.__class__.__name__ + "_" + self.tokenizer
 
 
-if __name__ == "__main__":
-	# text = '아버지가방에들어가신다'
-	text = '크리스토퍼 놀란에게 우리는 놀란다'
-	tok = KonlpyTokenizer(tokenizer_name='Mecab')
-	tokens = tok.tokenize(text)
-	print(tokens)
-	pos = tok.pos(text)
-	print(pos)
+VOCABS = [
+	'내부', '제도', '신고서', '전자', '하이프사이클', '테스팅', '고객사', '커스터마이징', '테스터', '미연', '지구국', '메시지', '영상처리',
+	'인터뷰', '조직도', '경영진'
+]
+
+DELETED_CHARS = "\\'|\\[|\\]|,|\\."
+
+
+class TwitterTokenizer(Tokenizer):
+
+	def __init__(self):
+		self.pos_tagger = Twitter(use_twitter_dictionary=False)
+		self.pos_tagger.add_dictionary(VOCABS, 'Noun')
+		self.pos_tagger.add_a_template(('Modifier', 'Noun', 'Noun', 'Noun', 'Noun'))
+
+	def tokenize(self, text: str) -> List[str]:
+		return list(filter(lambda x: x, self.stcs_to_words(text).split(' ')))
+
+	def stcs_to_words(self, text: str) -> str:
+		stc_tagged = map(lambda t: t[0], self.pos_tagger.pos(text))
+		stc = ' '.join(stc_tagged)
+		stc_replaced = re.sub(DELETED_CHARS, u'', stc)
+		return stc_replaced
