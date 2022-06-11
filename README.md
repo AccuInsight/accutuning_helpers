@@ -2,8 +2,13 @@
 accutuning preprocessors, utils for public
 
 ### Prerequisite
+for Ubuntu
 ```
 $ apt-get install -y libgomp1
+```
+for mac
+```
+$ brew install libgomp1
 ```
 
 ### Install
