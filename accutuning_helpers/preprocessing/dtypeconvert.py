@@ -5,6 +5,9 @@ from typing import Tuple, Literal, Dict, List
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
+from accutuning_helpers.text.embedder_bert import BERTVectorizer
+
 logger = logging.getLogger(__name__)
 
 TEXT_CONVERTER = Literal['tfidf', 'BERT', 'zero_shot', 'few_shot']
@@ -67,12 +70,12 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 			return self._vector_dict[col]
 		else:  # register vectorizer
 			if self._converter == 'tfidf':
-				from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
+# 				from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
 				vec = TfIdfTokenVectorizer(feature_name=col, **params)
 			elif self._converter == 'BERT':
 				## FIXME - flair version 에 맞게 huggingface version 4로 version up
 				## FIXME - sentence transformer 기반 BERT vectorizer는 deprecated 될 예정
-				from accutuning_helpers.text.embedder_bert import BERTVectorizer
+# 				from accutuning_helpers.text.embedder_bert import BERTVectorizer
 				vec = BERTVectorizer(feature_name=col)
 			self._vector_dict[col] = vec
 			return vec
