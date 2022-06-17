@@ -24,6 +24,7 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 	):
 		self.datatype_pair_match: Tuple[str, str] = datatype_pair_match
 		self._converter = text_converter
+		self.text_vectorizer = text_vectorizer
 		self._vector_dict: Dict[str, "TokenEmbedderBase"] = dict()
 
 	def fit(self, X: pd.DataFrame, y=0, **fit_params) -> "AccutuningDtypeConvert":
@@ -71,13 +72,13 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 			if self._converter == 'tfidf':
 # 				from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
 # 				vec = TfIdfTokenVectorizer(feature_name=col, **params)
-				vec = text_vectorizer(feature_name=col, **params)
+				vec = self.text_vectorizer(feature_name=col, **params)
 			elif self._converter == 'BERT':
 				## FIXME - flair version 에 맞게 huggingface version 4로 version up
 				## FIXME - sentence transformer 기반 BERT vectorizer는 deprecated 될 예정
 # 				from accutuning_helpers.text.embedder_bert import BERTVectorizer
 # 				vec = BERTVectorizer(feature_name=col)
-				vec = text_vectorizer(feature_name=col)
+				vec = self.text_vectorizer(feature_name=col)
 			self._vector_dict[col] = vec
 			return vec
 
