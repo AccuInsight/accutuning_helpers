@@ -2,8 +2,28 @@
 accutuning preprocessors, utils for public
 
 ### Prerequisite
+### 1. libgomp1
+- for Ubuntu
 ```
 $ apt-get install -y libgomp1
+```
+- for mac
+```
+$ brew install libgomp1
+```
+
+### 2. Mecab (optional)
+for text users only  (ref: https://konlpy.org/ko/latest/install/)
+
+- for Ubuntu
+```
+$ sudo apt-get install curl git
+$ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
+```
+
+- for mac
+```
+$ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
 ```
 
 ### Install
