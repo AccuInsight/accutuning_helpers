@@ -2,6 +2,7 @@ import os
 from unittest import TestCase
 
 import pandas as pd
+import pickle
 
 from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
 from accutuning_helpers.text.tokenizer import KonlpyTokenizer
@@ -26,7 +27,7 @@ class TestTfidfTokenVectorizer(TestCase):
 		comments = self.df['stcs']
 		comment = comments[0]
 
-		tokens = self.tokenizer.tokenize(comment)
+		tokens = self.tokenizer(comment)
 		print(f'tokens:{tokens}')
 		# assert tokens == ['크리스토퍼', '놀란', '우리', '놀란', '다']
 
@@ -61,3 +62,13 @@ class TestTfidfTokenVectorizer(TestCase):
 		assert self.embedder.embedding_length == 74
 		print(f'vector:{vec}')
 		print(f'vector.shape:{vec.shape}')
+
+	def test_save(self):
+		with open('test_dump.pkl', 'wb') as f:
+			pickle.dump(self.embedder, f)
+			print(f'located: {f}')
+
+	def test_load(self):
+		with open('test_dump.pkl', 'rb') as f:
+			embedder = pickle.load(f)
+			print(embedder)
