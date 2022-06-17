@@ -77,10 +77,9 @@ class KonlpyTokenizer(Tokenizer):
 		self._excluded_pos = excluded_pos or NEG_FILTER_POS
 
 	def tokenize(self, text: str) -> List[str]:
-		pos_filtered = map(lambda t: t[0], self.pos(text))
-		return list(pos_filtered)
+		return list(map(lambda t: t[0], self.pos(text)))
 
-	def __call__(self, text:str) -> List[str]:
+	def __call__(self, text: str) -> List[str]:
 		return self.tokenize(text)
 
 	def pos(self, text: str) -> List[Tuple]:
@@ -111,7 +110,7 @@ class TwitterTokenizer(Tokenizer):
 	def tokenize(self, text: str) -> List[str]:
 		return list(filter(lambda x: x, self.stcs_to_words(text).split(' ')))
 
-	def __call__(self, text:str) -> List[str]:
+	def __call__(self, text: str) -> List[str]:
 		return self.tokenize(text)
 
 	def stcs_to_words(self, text: str) -> str:

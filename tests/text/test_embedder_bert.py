@@ -25,7 +25,7 @@ class TestBERTVectorizer(TestCase):
 		tokens = self.embedder.tokenizer.tokenize(comment)
 		print(f'tokens:{tokens}')
 
-		# assert tokens == ['크리스토퍼', '놀란', '우리', '놀란', '다']
+	# assert tokens == ['크리스토퍼', '놀란', '우리', '놀란', '다']
 
 	def test_fit(self):
 		X = self.df

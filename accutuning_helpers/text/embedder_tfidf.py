@@ -75,5 +75,3 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 
 		for sentence_id, sentence in enumerate(sentences):
 			sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
-
-
