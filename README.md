@@ -26,6 +26,19 @@ $ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/
 $ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
 ```
 
+- mecab 설치 환경이 방화벽 등으로 고립된 경우 수동 설치
+  - https://bitbucket.org/eunjeon/mecab-ko/downloads/
+  - 위 ref link에서 mecab-ko-dic-XX.tar.gz를 다운받고 해당 환경에 아래와 같이 수동으로 make할것
+```
+$ tar zxfv mecab-ko-dic-XX.tar.gz
+$ cd mecab-ko-dic-XX
+$ ./autogen.sh
+$ configure
+$ make
+$ su
+# make install
+```
+
 ### Install
 ```
 $ pip3 install https://github.com/AIIP-DEV/accutuning_helpers/archive/<version>.zip
