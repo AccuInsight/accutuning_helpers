@@ -38,6 +38,15 @@ $ make
 $ su
 # make install
 ```
+=======
+for Ubuntu
+```
+$ apt-get install -y libgomp1
+```
+for mac
+```
+$ brew install libgomp1
+```
 
 ### Install
 ```
