@@ -85,7 +85,7 @@ class KlueYnatDataset(HuggingfaceDataset):
 
 class KlueNliDataset(HuggingfaceDataset):
 	label_name_map: Dict[int, str] = {
-		0: "관계 있음",
+		0: "유추 가능",
 		1: "무관함",
 		2: "모순",
 	}
@@ -97,8 +97,7 @@ class KlueNliDataset(HuggingfaceDataset):
 			tokenizer: Tokenizer,
 	):
 		##TODO: embedding tokenizer로부터 sep_token 읽어오는 로직 추가
-		# self.sep = " [SEP] "
-		self.sep = " "
+		self.sep = " [SEP] "
 
 		# features - [guid, source, premise, hypothesis, label]
 		prems, hypos = dataset.data['premise'], dataset.data['hypothesis']

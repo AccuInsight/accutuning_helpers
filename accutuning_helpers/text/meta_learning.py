@@ -133,11 +133,12 @@ class MetaLearner:
 
 		results = []
 		for c in corpora:
+			label_dict = c.make_label_dictionary(c.name)
 			tars.add_and_switch_to_new_task(
 				task_name=c.name,
-				label_dictionary=c.make_label_dictionary(c.name),
+				label_dictionary=label_dict,
 				label_type=c.name,
-				multi_label=True,
+				multi_label=label_dict.multi_label,
 			)
 
 			# initialize the text classifier trainer with corpus
@@ -152,7 +153,7 @@ class MetaLearner:
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
 				train_with_dev=self._train_with_dev,
 				use_tensorboard=True,
-				tensorboard_log_dir=self._output_path / 'tensorboard',
+				tensorboard_log_dir=self._output_path / 'tensorboard'/ c.name,
 			)
 			results.append(result)
 
@@ -181,10 +182,12 @@ class MetaLearner:
 		if task_name in tars.list_existing_tasks():
 			tars.switch_to_task(task_name)
 		else:
+			label_dict = c.make_label_dictionary(task_name)
 			tars.add_and_switch_to_new_task(
 				task_name=task_name,
-				label_dictionary=corpus.make_label_dictionary(task_name),
+				label_dictionary=label_dict,
 				label_type=task_name,
+				multi_label=label_dict.multi_label,
 			)
 
 		# initialize the text classifier trainer with corpus
