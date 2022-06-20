@@ -97,7 +97,8 @@ class KlueNliDataset(HuggingfaceDataset):
 			tokenizer: Tokenizer,
 	):
 		##TODO: embedding tokenizer로부터 sep_token 읽어오는 로직 추가
-		self.sep = " [SEP] "
+		# self.sep = " [SEP] "
+		self.sep = " "
 
 		# features - [guid, source, premise, hypothesis, label]
 		prems, hypos = dataset.data['premise'], dataset.data['hypothesis']
