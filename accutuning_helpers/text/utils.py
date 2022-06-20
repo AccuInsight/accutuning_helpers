@@ -50,7 +50,7 @@ def load(filepath) -> pd.DataFrame:
 	return df
 
 
-def identify_language(corpus_list, norm_probs=False):
+def identify_language(corpus_list: List[str], norm_probs=False) -> Tuple[List[str], List[float]]:
 	identifier = langid.LanguageIdentifier.from_modelstring(langid.model, norm_probs=norm_probs)
 	language = [identifier.classify(c)[0] for c in corpus_list]  # rank
 	lang_id_result = dict(Counter(language))
@@ -83,7 +83,7 @@ def correct_label(texts: List[str], tags: List[str]) -> Tuple[List[str], List[st
 	psx = cleanlab.latent_estimation.estimate_cv_predicted_probabilities(
 		X, s, clf=LogisticRegression(max_iter=1000, multi_class='auto', solver='lbfgs'))
 	pyx = psx
-	print("Fetched probabilities for", pyx.shape[0], 'examples and', pyx.shape[1], 'classes.')
+	logger.debug("Fetched probabilities for", pyx.shape[0], 'examples and', pyx.shape[1], 'classes.')
 
 	# Estimate the confident joint, a proxy for the joint distribution of label noise.
 	cj, cj_only_label_error_indices = cleanlab.latent_estimation.compute_confident_joint(
@@ -121,12 +121,10 @@ def save_output_file(filepath: pathlib.Path, obj) -> str:
 	return str(filepath.relative_to('/workspace'))
 
 
-def evaluate(target_df: pd.DataFrame, pred) -> None:
-	# stcs = target_df['stcs'].values.tolist()
-	tags = target_df['tags'].values.tolist()
-
-	logger.debug(f'분류 못함: {dict(Counter(pred))[NOT_CONFIDENT_TAG]} 건 포함 metrics')
-	logger.debug(metrics.classification_report(tags, pred))
+def evaluate(gold: List[str], pred: List[str]) -> None:
+	counter = Counter(pred)
+	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(counter)} 건 포함 metrics')
+	print(metrics.classification_report(gold, pred))
 
 	pred_expt = []
 	tags_expt = []
@@ -135,9 +133,9 @@ def evaluate(target_df: pd.DataFrame, pred) -> None:
 			pass
 		else:
 			pred_expt.append(pred[idx])
-			tags_expt.append(tags[idx])
-	logger.debug(f'분류 못함: {dict(Counter(pred))[NOT_CONFIDENT_TAG]} 건 제외 metrics')
-	logger.debug(metrics.classification_report(tags_expt, pred_expt))
+			tags_expt.append(gold[idx])
+	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(counter)} 건 제외 metrics')
+	print(metrics.classification_report(tags_expt, pred_expt))
 
 
 def is_confident_in_label_prediction(tags: List[str], class_name_list: List) -> bool:

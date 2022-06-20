@@ -47,7 +47,7 @@ WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
 PREDICTION_SCORE_THREASHOLD = 0.7
 
 
-def to_predictions(sentences: List[Sentence]) -> List[Tuple[Label, float]]:
+def to_predictions(sentences: List[Sentence]) -> List[Label]:
 	predictions = []
 	for sentence in sentences:
 		number_list = [label.score for label in sentence.labels]
@@ -55,11 +55,11 @@ def to_predictions(sentences: List[Sentence]) -> List[Tuple[Label, float]]:
 		if len(number_list) > 0:
 			# if max_value >= PREDICTION_SCORE_THREASHOLD:
 			max_index = number_list.index(max_value)
-			max_label, max_score = sentence.labels[max_index], sentence.labels[max_index].score
-			predictions.append((max_label, max_score,))
+			max_label = sentence.labels[max_index]
+			predictions.append(max_label)
 		else:
 			not_confident = Label(sentence, value=NOT_CONFIDENT_TAG, score=0.5)
-			predictions.append((not_confident, not_confident.score,))  ## TODO: NOT Confident 분기 정교화?
+			predictions.append(not_confident)  ## TODO: NOT Confident 분기 정교화?
 	return predictions
 
 
@@ -80,12 +80,12 @@ class MetaLearner:
 			model_path: Union[str, Path] = META_TRAINED_MODEL_PATH,
 			lang: str = 'ko',
 			learning_rate=5e-5,
-			mini_batch_size=1,
+			mini_batch_size=16,
 			patience=10,
 			max_epochs=1,
 			train_with_dev=True,
 			n_samples=5,
-			prediction_batch_size=4,
+			prediction_batch_size=16,
 	):
 		self._lang = lang
 		self._learning_rate = learning_rate
@@ -94,7 +94,7 @@ class MetaLearner:
 		self._max_epochs = max_epochs
 		self._train_with_dev = train_with_dev
 		self._n_samples = n_samples
-		self._batch_size = prediction_batch_size
+		self._prediction_batch_size = prediction_batch_size
 
 		self._output_path = output_path or Path(WORKPLACE_PATH, 'output')
 
@@ -215,9 +215,9 @@ class MetaLearner:
 			self,
 			texts: List[str],
 			class_nm_list: List[str] = None,
-	) -> List[Tuple[str, float]]:
+	) -> List[Label]:
 		tars = self._tars_model
-		batch = self._batch_size
+		batch = self._prediction_batch_size
 
 		sentences = [Sentence(text) for text in texts]
 		if class_nm_list:  # zero shot
@@ -235,7 +235,7 @@ class MetaLearner:
 			target_column_nm: str,
 			source_data_fp: str,
 			**config_kwargs,
-	) -> Dict[str, Union[str, List[str]]]:
+	) -> Dict[str, Union[str, List[str], List[Label]]]:
 		input_path = os.path.join(WORKPLACE_PATH, source_data_fp)
 		target_df = labeler_utils.load(input_path)
 		texts = target_df[target_column_nm].values.tolist()
@@ -257,7 +257,7 @@ class MetaLearner:
 			'text_name': target_column_nm,
 			'texts': texts,
 			'tag_name': target_column_nm,
-			'predictions': list(map(lambda x: x[0], predictions)),  # value만, score 제외
+			'predictions': predictions,  # value만, score 제외
 		}
 
 	@timer
@@ -270,7 +270,7 @@ class MetaLearner:
 			samples_fp,
 			correct,
 			**config_kwargs,
-	) -> Dict[str, Union[str, List[str]]]:
+	) -> Dict[str, Union[str, List[str], List[Label]]]:
 
 		# 1. fine tuning with samples
 		sample_path = os.path.join(WORKPLACE_HOME, samples_fp)
@@ -294,7 +294,7 @@ class MetaLearner:
 			'text_name': target_column_nm,
 			'texts': texts,
 			'tag_name': DEFAULT_TAG_COLUMN_NAME,
-			'predictions': list(map(lambda x: x[0], predictions)),  # value만, score 제외
+			'predictions': predictions,  # value만, score 제외
 		}
 
 	@timer
@@ -306,7 +306,7 @@ class MetaLearner:
 			target_column_nm,
 			source_data_fp,
 			**config_kwargs,
-	):
+	) -> Dict[str, Union[str, List[str], List[Label]]]:
 		result: Dict = self.zero_shot_learning(
 			class_nm_list,
 			target_column_nm,
