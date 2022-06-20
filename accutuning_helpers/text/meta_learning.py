@@ -381,6 +381,6 @@ if __name__ == "__main__":
 		mini_batch_size=32,
 		train_with_dev=True
 	)
-	result = meta.base_learning(down_sample=0.1, sample_missing_splits=True)
+	result = meta.base_learning(down_sample=0.1)
 	path = meta.save_model()
 	print(path)
