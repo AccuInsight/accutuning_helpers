@@ -6,7 +6,7 @@ from time import perf_counter
 from typing import Dict, List, Union, Tuple
 
 import pandas as pd
-from transformers.optimization import AdamW
+from torch.optim import AdamW
 from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
@@ -152,7 +152,6 @@ class MetaLearner:
 				learning_rate=self._learning_rate, # use very small learning rate
 				optimizer=AdamW,
 				param_selection_mode=True,
-				use_swa=True,
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
@@ -187,7 +186,7 @@ class MetaLearner:
 		if task_name in tars.list_existing_tasks():
 			tars.switch_to_task(task_name)
 		else:
-			label_dict = c.make_label_dictionary(task_name)
+			label_dict = corpus.make_label_dictionary(task_name)
 			tars.add_and_switch_to_new_task(
 				task_name=task_name,
 				label_dictionary=label_dict,
