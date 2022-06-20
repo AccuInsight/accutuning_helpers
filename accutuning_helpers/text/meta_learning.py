@@ -6,6 +6,7 @@ from time import perf_counter
 from typing import Dict, List, Union, Tuple
 
 import pandas as pd
+import transformers.optimization
 from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
@@ -64,6 +65,7 @@ def to_predictions(sentences: List[Sentence]) -> List[Tuple[Label, float]]:
 
 def get_task_name(labels: List[str]) -> str:
 	"""
+	##FIXME: tricky - 명시적으로 task name을 받는게 좋음
 	특정 task name이 없는 경우, unique label 의 집합을 task name 으로 한다
 	"""
 	unique = sorted(set(labels))
@@ -77,7 +79,7 @@ class MetaLearner:
 			output_path: Path = None,
 			model_path: Union[str, Path] = META_TRAINED_MODEL_PATH,
 			lang: str = 'ko',
-			learning_rate=0.02,
+			learning_rate=5e-4,
 			mini_batch_size=1,
 			patience=10,
 			max_epochs=1,
@@ -135,20 +137,21 @@ class MetaLearner:
 				task_name=c.name,
 				label_dictionary=c.make_label_dictionary(c.name),
 				label_type=c.name,
-				multi_label=False,
+				multi_label=True,
 			)
 
 			# initialize the text classifier trainer with corpus
 			trainer = ModelTrainer(tars, c)
 
 			# train model
-			result = trainer.fine_tune(
-				base_path=self._output_path/c.name,  # path to store the model artifacts
+			result = trainer.train(
+				base_path=self._output_path / c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
 				train_with_dev=self._train_with_dev,
+				monitor_train=True,
 				use_tensorboard=True,
 				tensorboard_log_dir=self._output_path,
 			)
@@ -345,7 +348,7 @@ class MetaLearner:
 		output_location = {
 			'labels': str((output_path / 'labels.pkl').relative_to(WORKPLACE_PATH)),
 			'clusters': str((output_path / 'clusters.pkl').relative_to(WORKPLACE_PATH)),
-			'fine_tuned_model': self._tars_model
+			'fine_tuned_model': self.save_model()
 		}
 
 		# save output location
@@ -356,13 +359,20 @@ class MetaLearner:
 
 
 if __name__ == "__main__":
+	# meta = MetaLearner(
+	# 	model_path=None,  # base learning
+	# 	max_epochs=3,
+	# 	mini_batch_size=1,
+	# 	train_with_dev=True
+	# )
+	# result = meta.base_learning(down_sample=0.001, sample_missing_splits=True)
+
 	meta = MetaLearner(
 		model_path=None,  # base learning
-		max_epochs=10,
-		mini_batch_size=8,
+		max_epochs=20,
+		mini_batch_size=16,
 		train_with_dev=True
 	)
-
 	result = meta.base_learning(down_sample=0.1, sample_missing_splits=True)
 	path = meta.save_model()
 	print(path)
