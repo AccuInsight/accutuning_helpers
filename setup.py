@@ -21,7 +21,8 @@ setup(
         "langid>=1.1.6",
         "cleanlab>=1.0",
         "flair==0.11.3",
-        "sentencepiece>=0.1.95"
+        "sentencepiece>=0.1.95",
+        "datasets>2.3.2", # Huggingface datasets
         # "sentence-transformers==0.3.9",
         # "protobuf==3.20.0",
     ]
