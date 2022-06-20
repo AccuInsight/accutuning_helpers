@@ -76,7 +76,7 @@ class TestMetaBaseLearner(TestCase):
 		)
 
 	def test_base_learning(self):
-		result = self.meta.base_learning(down_sample=0.0001)
+		result = self.meta.base_learning(down_sample=0.001)
 		assert result
 		path = self.meta.save_model()
 		assert os.path.exists(path)
