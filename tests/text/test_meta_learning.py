@@ -21,8 +21,8 @@ class TestMetaLearner(TestCase):
 	def test_zero_shot_learning(self):
 		conf = {
 			"random_seed": 42,
-			# "source_data_fp": "data/nnst_lt_10.csv",
-			"source_data_fp": "data/nnst_lt_1990.csv",
+			"source_data_fp": "data/nnst_lt_10.csv",
+			# "source_data_fp": "data/nnst_lt_1990.csv",
 			"samples_fp": "",
 			"related_stcs": "",
 			"correct": True,
@@ -50,7 +50,7 @@ class TestMetaLearner(TestCase):
 			"source_data_fp": "data/nnst_lt_10.csv",
 			"samples_fp": "data/nnst_lt_10.csv",
 			"related_stcs": "",
-			"correct": True,
+			"correct": False,
 			"class_nm_list": None,
 			"target_column_nm": "stcs",
 			"samples_target_column_nm": "stcs",
@@ -59,7 +59,15 @@ class TestMetaLearner(TestCase):
 		}
 		meta = self.meta
 		result = meta.few_shot_learning(**conf)
-		print(result)
+		result.pop('texts') # too long to print
+		result['predictions'] = [p.value for p in result['predictions']]
+		print(json.dumps(result, indent=2, ensure_ascii=False),)
+
+		input_path = os.path.join(WORKPLACE_PATH, conf['source_data_fp'])
+		target_df = labeler_utils.load(input_path)
+		gold, pred = target_df['tags'], result['predictions']
+		labeler_utils.evaluate(gold, pred)
+
 		assert result
 
 	# def test_label_predict(self):
