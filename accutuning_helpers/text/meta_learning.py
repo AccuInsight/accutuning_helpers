@@ -143,7 +143,7 @@ class MetaLearner:
 
 			# train model
 			result = trainer.fine_tune(
-				base_path=self._output_path,  # path to store the model artifacts
+				base_path=self._output_path/c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
@@ -358,11 +358,11 @@ class MetaLearner:
 if __name__ == "__main__":
 	meta = MetaLearner(
 		model_path=None,  # base learning
-		max_epochs=100,
+		max_epochs=10,
 		mini_batch_size=8,
 		train_with_dev=True
 	)
 
-	result = meta.base_learning(down_sample=1.0, sample_missing_splits=True)
+	result = meta.base_learning(down_sample=0.1, sample_missing_splits=True)
 	path = meta.save_model()
 	print(path)
