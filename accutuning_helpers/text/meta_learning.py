@@ -151,7 +151,6 @@ class MetaLearner:
 				patience=self._patience,
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
 				train_with_dev=self._train_with_dev,
-				monitor_train=True,
 				use_tensorboard=True,
 				tensorboard_log_dir=self._output_path,
 			)
