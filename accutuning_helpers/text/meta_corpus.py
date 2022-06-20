@@ -85,9 +85,9 @@ class KlueYnatDataset(HuggingfaceDataset):
 
 class KlueNliDataset(HuggingfaceDataset):
 	label_name_map: Dict[int, str] = {
-		0: "entailment",
-		1: "neutral",
-		2: "contradiction",
+		0: "관계 있음",
+		1: "무관함",
+		2: "모순",
 	}
 
 	def __init__(

@@ -79,7 +79,7 @@ class MetaLearner:
 			output_path: Path = None,
 			model_path: Union[str, Path] = META_TRAINED_MODEL_PATH,
 			lang: str = 'ko',
-			learning_rate=5e-4,
+			learning_rate=5e-5,
 			mini_batch_size=1,
 			patience=10,
 			max_epochs=1,
@@ -115,7 +115,7 @@ class MetaLearner:
 
 		if 0 < down_sample < 1.0:
 			corpora = [
-				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
+				# KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
 				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits).downsample(down_sample),
 			]
 		else:  # down_sample == 1.0
@@ -152,7 +152,7 @@ class MetaLearner:
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
 				train_with_dev=self._train_with_dev,
 				use_tensorboard=True,
-				tensorboard_log_dir=self._output_path,
+				tensorboard_log_dir=self._output_path / 'tensorboard',
 			)
 			results.append(result)
 
