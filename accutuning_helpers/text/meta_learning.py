@@ -115,7 +115,7 @@ class MetaLearner:
 
 		if 0 < down_sample < 1.0:
 			corpora = [
-				# KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
+				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
 				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits).downsample(down_sample),
 			]
 		else:  # down_sample == 1.0
@@ -201,6 +201,8 @@ class MetaLearner:
 		result = trainer.fine_tune(
 			base_path=self._output_path,  # path to store the model artifacts
 			learning_rate=self._learning_rate,  # use very small learning rate
+			optimizer=AdamW,
+			param_selection_mode=True,
 			mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 			max_epochs=self._max_epochs,  # terminate after 10 epochs
 			train_with_dev=self._train_with_dev
