@@ -358,11 +358,11 @@ class MetaLearner:
 if __name__ == "__main__":
 	meta = MetaLearner(
 		model_path=None,  # base learning
-		max_epochs=3,
-		mini_batch_size=2,
+		max_epochs=100,
+		mini_batch_size=8,
 		train_with_dev=True
 	)
 
-	result = meta.base_learning(down_sample=0.001, sample_missing_splits=True)
+	result = meta.base_learning(down_sample=1.0, sample_missing_splits=True)
 	path = meta.save_model()
 	print(path)
