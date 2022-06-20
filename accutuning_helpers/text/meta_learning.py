@@ -145,6 +145,8 @@ class MetaLearner:
 			trainer = ModelTrainer(tars, c)
 
 			# train model
+			log_dir = self._output_path / 'tensorboard'/ c.name
+			log_dir.mkdir(parents=True, exist_ok=True)
 			result = trainer.train(
 				base_path=self._output_path / c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
@@ -153,7 +155,7 @@ class MetaLearner:
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
 				train_with_dev=self._train_with_dev,
 				use_tensorboard=True,
-				tensorboard_log_dir=self._output_path / 'tensorboard'/ c.name,
+				tensorboard_log_dir=log_dir,
 			)
 			results.append(result)
 
