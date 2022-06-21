@@ -62,11 +62,17 @@ class TestMetaLearner(TestCase):
 		result = meta.few_shot_learning(**conf)
 		result.pop('texts') # too long to print
 		result['predictions'] = [p.value for p in result['predictions']]
-		print(json.dumps(result, indent=2, ensure_ascii=False),)
+		# print(json.dumps(result, indent=2, ensure_ascii=False),)
 
 		input_path = os.path.join(WORKPLACE_PATH, conf['source_data_fp'])
 		target_df = labeler_utils.load(input_path)
 		gold, pred = target_df['tags'], result['predictions']
+		labeler_utils.evaluate(gold, pred)
+
+		conf['correct'] = True
+		result = meta.few_shot_learning(**conf)
+		result['predictions'] = [p.value for p in result['predictions']]
+		pred = result['predictions']
 		labeler_utils.evaluate(gold, pred)
 
 		assert result

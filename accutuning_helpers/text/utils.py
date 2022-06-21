@@ -12,7 +12,7 @@ from langid import langid
 from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-
+from flair.data import Label
 from accutuning_helpers.text import NOT_CONFIDENT_TAG, MIN_LABEL_FREQUENCY
 from accutuning_helpers.text.tokenizer import TwitterTokenizer
 
@@ -60,7 +60,7 @@ def identify_language(corpus_list: List[str], norm_probs=False) -> Tuple[List[st
 	return top_langs, top_overall
 
 
-def correct_label(texts: List[str], tags: List[str]) -> Tuple[List[str], List[str]]:
+def correct_label(texts: List[str], labels: List[Label]) -> Tuple[List[str], List[Label]]:
 	top_langs, top_overall = identify_language(texts)
 	if top_langs[0] == 'ko' and top_overall[0] > 80:
 		tokenized_stcs = [TwitterTokenizer().stcs_to_words(s) for s in texts]
@@ -71,6 +71,7 @@ def correct_label(texts: List[str], tags: List[str]) -> Tuple[List[str], List[st
 	tfidf = TfidfVectorizer().fit(tokenized_stcs)
 	embs = tfidf.transform(tokenized_stcs).toarray()
 
+	tags = [x.value for x in labels]
 	tags = sorted(list(set(tags)))
 	label2int = {l: i for i, l in enumerate(tags)}
 	int2label = {i: l for i, l in enumerate(tags)}
@@ -102,8 +103,8 @@ def correct_label(texts: List[str], tags: List[str]) -> Tuple[List[str], List[st
 	for idx in label_errors_idx:
 		replacements.append(int2label[np.argmax(pyx[idx])])
 	for (index, replacement) in zip(label_errors_idx, replacements):
-		tags[index] = replacement
-	return texts, tags
+		labels[index].value = replacement
+	return texts, labels
 
 
 def sampling(df: pd.DataFrame, tag_column_name: str, class_nm_list: List[str], n_samples: int) -> pd.DataFrame:
