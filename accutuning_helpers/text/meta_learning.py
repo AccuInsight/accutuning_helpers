@@ -285,9 +285,10 @@ class MetaLearner:
 		predictions = self._shot_learning(texts, class_nm_list=None)
 
 		# 3. correct predictions if told to do so
-		if correct:
-			logger.debug('FSL - Correcting labels')
-			texts, predictions = labeler_utils.correct_label(texts, predictions)
+		# FIXME: cleanlab 2.0 적용. 분류못함 삭제되도록 유도 적용
+		# if correct:
+		# 	logger.debug('FSL - Correcting labels')
+		# 	texts, predictions = labeler_utils.correct_label(texts, predictions)
 
 		# 4. return result
 		return {
