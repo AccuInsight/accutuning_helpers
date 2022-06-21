@@ -377,10 +377,10 @@ if __name__ == "__main__":
 
 	meta = MetaLearner(
 		model_path=None,  # base learning
-		max_epochs=20,
+		max_epochs=30,
 		mini_batch_size=32,
 		train_with_dev=True
 	)
-	result = meta.base_learning(down_sample=0.1)
+	result = meta.base_learning(down_sample=0.3)
 	path = meta.save_model()
 	print(path)

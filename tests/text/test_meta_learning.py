@@ -47,7 +47,8 @@ class TestMetaLearner(TestCase):
 	def test_few_shot_learning(self):
 		conf = {
 			"random_seed": 42,
-			"source_data_fp": "data/nnst_lt_10.csv",
+			# "source_data_fp": "data/nnst_lt_10.csv",
+			"source_data_fp": "data/nnst_lt_1990.csv",
 			"samples_fp": "data/nnst_lt_10.csv",
 			"related_stcs": "",
 			"correct": False,
