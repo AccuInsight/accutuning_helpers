@@ -123,7 +123,7 @@ def save_output_file(filepath: pathlib.Path, obj) -> str:
 
 def evaluate(gold: List[str], pred: List[str]) -> None:
 	counter = Counter(pred)
-	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(counter)} 건 포함 metrics')
+	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(gold)} 건 포함 metrics')
 	print(metrics.classification_report(gold, pred))
 
 	pred_expt = []
@@ -134,7 +134,7 @@ def evaluate(gold: List[str], pred: List[str]) -> None:
 		else:
 			pred_expt.append(pred[idx])
 			tags_expt.append(gold[idx])
-	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(counter)} 건 제외 metrics')
+	print(f'분류 못함: {counter[NOT_CONFIDENT_TAG]} / {len(gold)} 건 제외 metrics')
 	print(metrics.classification_report(tags_expt, pred_expt))
 
 
