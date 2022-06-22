@@ -37,16 +37,18 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 		self._vectorizer.fit(texts, y=y)
 		return self
 
-	def vectorize(self, df: pd.DataFrame) -> pd.DataFrame:
-		# np.set_printoptions(threshold=100)
-		corpus_embeddings = self.encode(df[self.feature_name].tolist())
-		# columns = [
-		# 	f'{self.feature_name}_{i}'
-		# 	for i in range(corpus_embeddings.shape[1])
-		# ]
-		columns = self._vectorizer.get_feature_names()
-		new_df = pd.DataFrame.sparse.from_spmatrix(corpus_embeddings, columns=columns)
-		return new_df
+	def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+		corpus_embeddings = self.encode(X[self.feature_name].tolist())
+		corpus_columns = self._vectorizer.get_feature_names()
+		X = X.drop(self.feature_name, axis=1)
+
+		## BUGFIX df.concat(X, corpus_df, axis=1) 이 NaN을 일으켜 numpy로 concat후 X부분만 형변환 함
+		concated_ = np.append(X.to_numpy(), corpus_embeddings.A, axis=1)
+		concated_df = pd.DataFrame(concated_, columns=list(X.columns) + corpus_columns)
+		for c in X.columns:
+			concated_df[c] = concated_df[c].astype(X[c].dtype)
+
+		return concated_df
 
 	def encode(self, sentences: Iterable[str]) -> np.ndarray:
 		# documents = [self._tokenizer.tokenize(text) for text in X]
