@@ -11,11 +11,9 @@ from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW
 
 from accutuning_helpers.text import NOT_CONFIDENT_TAG
 from accutuning_helpers.text import utils as labeler_utils
-from accutuning_helpers.text.meta_corpus import KlueCorpus
 
 logger = logging.getLogger(__name__)
 
@@ -112,66 +110,6 @@ class MetaLearner:
 			self._tars_model: TARSClassifier = TARSClassifier.load(self._model_path)
 		else:
 			self._tars_model: TARSClassifier = None
-
-	def base_learning(
-			self,
-			embedding: str = 'klue/bert-base',
-			down_sample: float = 1.0,
-			sample_missing_splits=False,
-	):
-		assert not self._tars_model and 0 < down_sample <= 1
-
-		if 0 < down_sample < 1.0:
-			corpora = [
-				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
-				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits).downsample(down_sample),
-			]
-		else:  # down_sample == 1.0
-			corpora = [
-				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits),
-				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits),
-			]
-
-		# TODO: 추가 klue task, 한글 task
-		# data = MultiCorpus(corpora, name='klue', sample_missing_splits=sample_missing_splits)
-
-		tars = TARSClassifier(
-			embeddings=embedding,
-		)
-
-		results = []
-		for c in corpora:
-			label_dict = c.make_label_dictionary(c.name)
-			tars.add_and_switch_to_new_task(
-				task_name=c.name,
-				label_dictionary=label_dict,
-				label_type=c.name,
-				multi_label=label_dict.multi_label,
-			)
-
-			# initialize the text classifier trainer with corpus
-			trainer = ModelTrainer(tars, c)
-
-			# train model
-			log_dir = self._output_path / 'tensorboard' / c.name
-			log_dir.mkdir(parents=True, exist_ok=True)
-			result = trainer.train(
-				base_path=self._output_path / c.name,  # path to store the model artifacts
-				learning_rate=self._learning_rate,  # use very small learning rate
-				optimizer=AdamW,
-				param_selection_mode=True,
-				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
-				patience=self._patience,
-				max_epochs=self._max_epochs,  # terminate after 10 epochs
-				train_with_dev=self._train_with_dev,
-				use_tensorboard=True,
-				tensorboard_log_dir=log_dir,
-			)
-			results.append(result)
-
-		self._tars_model = tars  # replace with fine tuned model
-		logger.info(f'fine tuning completed for corpora:{[c.name for c in corpora]}, results:{results}')
-		return results
 
 	@timer
 	def fine_tuning(
@@ -379,23 +317,3 @@ class MetaLearner:
 			json.dumps(output_path_info)
 		)
 		return output_path_info
-
-
-if __name__ == "__main__":
-	# meta = MetaLearner(
-	# 	model_path=None,  # base learning
-	# 	max_epochs=3,
-	# 	mini_batch_size=1,
-	# 	train_with_dev=True
-	# )
-	# result = meta.base_learning(down_sample=0.001, sample_missing_splits=True)
-
-	meta = MetaLearner(
-		model_path=None,  # base learning
-		max_epochs=30,
-		mini_batch_size=32,
-		train_with_dev=True
-	)
-	result = meta.base_learning(down_sample=0.3)
-	path = meta.save_model()
-	print(path)
