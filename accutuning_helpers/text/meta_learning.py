@@ -1,22 +1,30 @@
 import json
 import logging
 import os
+import pickle
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union
 
 import pandas as pd
-from torch.optim import AdamW
 from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
 from flair.trainers import ModelTrainer
+from torch.optim import AdamW
 
 from accutuning_helpers.text import NOT_CONFIDENT_TAG
 from accutuning_helpers.text import utils as labeler_utils
 from accutuning_helpers.text.meta_corpus import KlueCorpus
 
 logger = logging.getLogger(__name__)
+
+
+META_TRAINED_MODEL_PATH = '/code/resources/taggers/agnews_all/final-model.pt'
+DEFAULT_TAG_COLUMN_NAME = 'predicted_tags'
+WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
+WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
+PREDICTION_SCORE_THRESHOLD = 0.7
 
 
 def timer(fn):
@@ -40,11 +48,11 @@ def timer(fn):
 	return inner
 
 
-META_TRAINED_MODEL_PATH = '/code/resources/taggers/agnews_all/final-model.pt'
-DEFAULT_TAG_COLUMN_NAME = 'predicted_tags'
-WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
-WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
-PREDICTION_SCORE_THREASHOLD = 0.7
+def save_output_file(filepath: Path, obj) -> str:
+	filepath.write_bytes(
+		pickle.dumps(obj)
+	)
+	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
 def to_predictions(sentences: List[Sentence]) -> List[Label]:
@@ -145,11 +153,11 @@ class MetaLearner:
 			trainer = ModelTrainer(tars, c)
 
 			# train model
-			log_dir = self._output_path / 'tensorboard'/ c.name
+			log_dir = self._output_path / 'tensorboard' / c.name
 			log_dir.mkdir(parents=True, exist_ok=True)
 			result = trainer.train(
 				base_path=self._output_path / c.name,  # path to store the model artifacts
-				learning_rate=self._learning_rate, # use very small learning rate
+				learning_rate=self._learning_rate,  # use very small learning rate
 				optimizer=AdamW,
 				param_selection_mode=True,
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
@@ -340,31 +348,37 @@ class MetaLearner:
 
 	def save_result(
 			self,
-			result_file: str,
+			result_csv_filename: str,
 			text_name: str,
 			texts: List[str],
 			tag_name: str,
 			predictions: List[str],
+			model_path: str = None,
 	) -> Dict[str, str]:
 		output_path = self._output_path
 		# save results
 		result_df = pd.DataFrame({text_name: texts, tag_name: predictions})
-		result_df.to_csv(output_path / result_file, index=False)
-		labeler_utils.save_output_file(output_path / 'labels.pkl', predictions)
-		labeler_utils.save_output_file(output_path / 'clusters.pkl', list(set(predictions)))
+		result_df.to_csv(output_path / result_csv_filename, index=False)
 
-		# TODO: save model location
-		output_location = {
-			'labels': str((output_path / 'labels.pkl').relative_to(WORKPLACE_PATH)),
-			'clusters': str((output_path / 'clusters.pkl').relative_to(WORKPLACE_PATH)),
-			'fine_tuned_model': self.save_model()
+		labels_path = save_output_file(output_path / 'labels.pkl', predictions)
+		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(predictions)))
+		model_path = model_path or self.save_model()
+
+		# output_path_info = {
+		# 	'labels': str((output_path / 'labels.pkl').relative_to(WORKPLACE_PATH)),
+		# 	'clusters': str((output_path / 'clusters.pkl').relative_to(WORKPLACE_PATH)),
+		# 	'fine_tuned_model': self.save_model()
+		# }
+		output_path_info = {
+			'labels': labels_path,
+			'clusters': clusters_path,
+			'fine_tuned_model': model_path,
 		}
-
 		# save output location
 		(output_path / 'output.json').write_text(
-			json.dumps(output_location)
+			json.dumps(output_path_info)
 		)
-		return output_location
+		return output_path_info
 
 
 if __name__ == "__main__":
