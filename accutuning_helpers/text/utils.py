@@ -7,11 +7,12 @@ import cleanlab
 import numpy as np
 import pandas as pd
 import torch
+from flair.data import Label
 from langid import langid
 from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from flair.data import Label
+
 from accutuning_helpers.text import NOT_CONFIDENT_TAG, MIN_LABEL_FREQUENCY
 from accutuning_helpers.text.tokenizer import TwitterTokenizer
 
@@ -52,7 +53,6 @@ def load(filepath) -> pd.DataFrame:
 def identify_language(corpus_list: List[str], norm_probs=False) -> Tuple[List[str], List[float]]:
 	identifier = langid.LanguageIdentifier.from_modelstring(langid.model, norm_probs=norm_probs)
 	language = [identifier.classify(c)[0] for c in corpus_list]  # rank
-	Counter(language)
 	lang_id_result = dict(Counter(language))
 	top_langs = list(lang_id_result)
 	rst = list(lang_id_result.values())
@@ -61,7 +61,7 @@ def identify_language(corpus_list: List[str], norm_probs=False) -> Tuple[List[st
 
 
 def correct_label(texts: List[str], labels: List[Label]) -> Tuple[List[str], List[Label]]:
-	top_langs, top_overall = identify_language(texts[:5]) # 최대 5문장만 보면 됨
+	top_langs, top_overall = identify_language(texts[:5])  # 최대 5문장만 보면 됨
 	if top_langs[0] == 'ko' and top_overall[0] > 80:
 		tokenized_stcs = [TwitterTokenizer().stcs_to_words(s) for s in texts]
 	else:

@@ -1,18 +1,16 @@
 import logging
-from typing import Dict, Literal, List
+from typing import Dict, List, Literal
 
 import datasets
-from flair.data import Sentence, Tokenizer, Corpus
+from accutuning_helpers.text.meta_learning import MetaLearner
+from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
 from torch.optim import AdamW
 
-from accutuning_helpers.text.meta_learning import MetaLearner
-
-logger = logging.getLogger(__name__)
-TaskName = Literal['ynat', 'nli', 'sts', 'ner', 're', 'dp', 'mrc', 'wos']
+logger = logging.getLogger()
 
 
 def fetch(
@@ -149,6 +147,95 @@ class KlueStsDataset(HuggingfaceDataset):
 		return len(self.pairs)
 
 
+class PawsXDataset(HuggingfaceDataset):
+	dataset_args = ['PAWS-X', 'ko']
+	task_name = 'paws-x'
+	label_name_map: Dict[int, str] = {
+		0: "전혀 다른 의미의 문장",
+		1: "동일한 의미의 문장",
+	}
+
+	def __init__(
+			self,
+			dataset: datasets.Dataset,
+			tokenizer: Tokenizer,
+	):
+		self.sep = " [SEP] "
+
+		# features - [id, sentence1, sentence2, label]
+		s1s, s2s = dataset.data['sentence1'], dataset.data['sentence2']
+		tags = [self.label_name_map[i.as_py()] for i in dataset.data['label']]
+		self.pairs: List[Sentence] = [
+			Sentence(text=str(s1) + self.sep + str(s2), use_tokenizer=tokenizer).add_label(self.task_name, tag)
+			for s1, s2, tag in zip(s1s, s2s, tags)
+		]
+
+	def __getitem__(self, index: int) -> Sentence:
+		return self.pairs[index]
+
+	def __len__(self) -> int:
+		return len(self.pairs)
+
+
+class NaverSentimentMovieCommentsDataset(HuggingfaceDataset):
+	dataset_args = ['nsmc']
+	task_name = 'nsmc'
+	label_name_map: Dict[int, str] = {
+		0: "부정적인 평가",
+		1: "긍정적인 평가",
+	}
+
+	def __init__(
+			self,
+			dataset: datasets.Dataset,
+			tokenizer: Tokenizer,
+	):
+		# features - [id, document, label]
+		texts = dataset.data['document']
+		tags = [self.label_name_map[i.as_py()] for i in dataset.data['label']]
+		self._sentences: List[Sentence] = [
+			Sentence(str(text), use_tokenizer=tokenizer).add_label(self.task_name, tag)
+			for text, tag in zip(texts, tags)
+		]
+
+	def __getitem__(self, index: int) -> Sentence:
+		return self._sentences[index]
+
+	def __len__(self) -> int:
+		return len(self._sentences)
+
+
+class KoreanRestaurantReviewsDataset(HuggingfaceDataset):
+	dataset_args = ["Wittgensteinian/KR3"]
+	task_name = 'kr3'
+	label_name_map: Dict[int, str] = {
+		0: "부정적인 평가",
+		1: "긍정적인 평가",
+		2: "이도 저도 아닌 애매한 평가"
+	}
+
+	def __init__(
+			self,
+			dataset: datasets.Dataset,
+			tokenizer: Tokenizer,
+	):
+		# features - [Rating, Review, __index_level_0__ ]
+		texts = dataset.data['Review']
+		tags = [self.label_name_map[i.as_py()] for i in dataset.data['Rating']]
+		self._sentences: List[Sentence] = [
+			Sentence(str(text), use_tokenizer=tokenizer).add_label(self.task_name, tag)
+			for text, tag in zip(texts, tags)
+		]
+
+	def __getitem__(self, index: int) -> Sentence:
+		return self._sentences[index]
+
+	def __len__(self) -> int:
+		return len(self._sentences)
+
+
+
+
 class BaseMetaLearner(MetaLearner):
 
 	def __init__(self, *args, **kwargs):
@@ -166,6 +253,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 		]
 
 		if 0 < down_sample < 1.0:
