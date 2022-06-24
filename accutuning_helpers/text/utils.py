@@ -1,5 +1,4 @@
 import logging
-import pathlib
 import pickle
 from collections import Counter
 from typing import List, Tuple
@@ -8,11 +7,12 @@ import cleanlab
 import numpy as np
 import pandas as pd
 import torch
+from flair.data import Label
 from langid import langid
 from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from flair.data import Label
+
 from accutuning_helpers.text import NOT_CONFIDENT_TAG, MIN_LABEL_FREQUENCY
 from accutuning_helpers.text.tokenizer import TwitterTokenizer
 
@@ -61,7 +61,7 @@ def identify_language(corpus_list: List[str], norm_probs=False) -> Tuple[List[st
 
 
 def correct_label(texts: List[str], labels: List[Label]) -> Tuple[List[str], List[Label]]:
-	top_langs, top_overall = identify_language(texts)
+	top_langs, top_overall = identify_language(texts[:5])  # 최대 5문장만 보면 됨
 	if top_langs[0] == 'ko' and top_overall[0] > 80:
 		tokenized_stcs = [TwitterTokenizer().stcs_to_words(s) for s in texts]
 	else:
@@ -113,13 +113,6 @@ def sampling(df: pd.DataFrame, tag_column_name: str, class_nm_list: List[str], n
 	rst = df.loc[df[tag_column_name].isin(class_nm_list)]
 	rst = rst.groupby(tag_column_name, as_index=False).apply(fn)
 	return rst
-
-
-def save_output_file(filepath: pathlib.Path, obj) -> str:
-	filepath.write_bytes(
-		pickle.dumps(obj)
-	)
-	return str(filepath.relative_to('/workspace'))
 
 
 def evaluate(gold: List[str], pred: List[str]) -> None:
