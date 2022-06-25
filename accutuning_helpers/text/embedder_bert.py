@@ -1,33 +1,34 @@
-from typing import Iterable, List
 import logging
+from typing import Iterable, List
+
 import numpy as np
 import pandas as pd
 from flair.data import Tokenizer
-from flair.embeddings import DocumentEmbeddings
-from sentence_transformers import models, SentenceTransformer
+from sentence_transformers import SentenceTransformer
 
 from accutuning_helpers.text.embedder import TokenEmbedderBase
 
 logger = logging.getLogger(__name__)
 
 
-class BERTVectorizer(TokenEmbedderBase, DocumentEmbeddings):
+class BERTVectorizer(TokenEmbedderBase):
 
 	def __init__(
 			self,
 			feature_name,
-			bert_model_name='bert-base-multilingual-cased',
+			bert_model_name='sentence-transformers/distiluse-base-multilingual-cased-v1',
 	):
 		super(BERTVectorizer, self).__init__(feature_name)
-		logger.critical("BERT Vectorizer is deprecated. Use TFIDF embedder instead.")
 
-		word_embedding_model = models.Transformer(bert_model_name)
-		pooling_model = models.Pooling(
-			word_embedding_model.get_word_embedding_dimension(),
-			pooling_mode_mean_tokens=True,
-			pooling_mode_cls_token=False,
-			pooling_mode_max_tokens=False)
-		self.model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+		# 학습하지 않은 BERT 대신 sentence transformers가 자체적으로 multilingual로 학습한 vector로 수정
+		# word_embedding_model = models.Transformer(bert_model_name)
+		# pooling_model = models.Pooling(
+		# 	word_embedding_model.get_word_embedding_dimension(),
+		# 	pooling_mode_mean_tokens=True,
+		# 	pooling_mode_cls_token=False,
+		# 	pooling_mode_max_tokens=False)
+		# self.model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+		self.model = SentenceTransformer(bert_model_name)
 		self._tokenizer = _Tokenizer(delegator=self.model)
 
 	def fit(self, X, y=0, **fit_params):

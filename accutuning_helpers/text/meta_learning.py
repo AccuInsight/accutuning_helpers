@@ -1,22 +1,31 @@
 import json
 import logging
 import os
+import pickle
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union
 
 import pandas as pd
-from torch.optim import AdamW
 from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
 from flair.trainers import ModelTrainer
+from torch.optim.adamw import AdamW
 
 from accutuning_helpers.text import NOT_CONFIDENT_TAG
 from accutuning_helpers.text import utils as labeler_utils
-from accutuning_helpers.text.meta_corpus import KlueCorpus
 
 logger = logging.getLogger(__name__)
+
+META_MODEL_DIR = '/code/resources/labeler_models/'
+META_MODEL_BIN_KO = 'tars-bert-ko-v1.pt'
+META_MODEL_BIN_EN = 'tars-base-v8.pt'
+
+DEFAULT_TAG_COLUMN_NAME = 'gold_tags'
+WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
+WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
+PREDICTION_SCORE_THRESHOLD = 0.7
 
 
 def timer(fn):
@@ -40,11 +49,11 @@ def timer(fn):
 	return inner
 
 
-META_TRAINED_MODEL_PATH = '/code/resources/taggers/agnews_all/final-model.pt'
-DEFAULT_TAG_COLUMN_NAME = 'predicted_tags'
-WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
-WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
-PREDICTION_SCORE_THREASHOLD = 0.7
+def save_output_file(filepath: Path, obj) -> str:
+	filepath.write_bytes(
+		pickle.dumps(obj)
+	)
+	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
 def to_predictions(sentences: List[Sentence]) -> List[Label]:
@@ -77,8 +86,7 @@ class MetaLearner:
 	def __init__(
 			self,
 			output_path: Path = None,
-			model_path: Union[str, Path] = META_TRAINED_MODEL_PATH,
-			lang: str = 'ko',
+			model_path: Union[str, Path] = None,
 			learning_rate=5e-5,
 			mini_batch_size=16,
 			patience=10,
@@ -87,7 +95,6 @@ class MetaLearner:
 			n_samples=5,
 			prediction_batch_size=16,
 	):
-		self._lang = lang
 		self._learning_rate = learning_rate
 		self._mini_batch_size = mini_batch_size
 		self._patience = patience
@@ -95,75 +102,44 @@ class MetaLearner:
 		self._train_with_dev = train_with_dev
 		self._n_samples = n_samples
 		self._prediction_batch_size = prediction_batch_size
-
 		self._output_path = output_path or Path(WORKPLACE_PATH, 'output')
-
-		##TODO: detect language -> pretrained model 선택, fine tuned model 이 있는지 여부 탐색?
 		self._model_path = model_path
-		if self._model_path:
-			self._tars_model: TARSClassifier = TARSClassifier.load(self._model_path)
-		else:
-			self._tars_model: TARSClassifier = None
+		self._lang = None #lazy identify
+		self._tars_model: TARSClassifier = None  # lazy loading
 
-	def base_learning(
-			self,
-			embedding: str = 'klue/bert-base',
-			down_sample: float = 1.0,
-			sample_missing_splits=False,
-	):
-		assert not self._tars_model and 0 < down_sample <= 1
+	@property
+	def model_path(self):
+		"""
+		현재 self._tars_model 이 load 되었던 directory를 return 한다.
+		load 이후 학습이 진행된 경우 weight가 달라졌으므로 이에 유의한다.
+		"""
+		return self._model_path
 
-		if 0 < down_sample < 1.0:
-			corpora = [
-				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits).downsample(down_sample),
-				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits).downsample(down_sample),
-			]
-		else:  # down_sample == 1.0
-			corpora = [
-				KlueCorpus(klue_task='ynat', sample_missing_splits=sample_missing_splits),
-				KlueCorpus(klue_task='nli', sample_missing_splits=sample_missing_splits),
-			]
+	def _load_model(self, model_path: str = None, lang: str = 'ko'):
+		"""
+		언어가 결정되는 시점은 data를 읽은 이후라, 늦게 모델을 load 한다
+		"""
+		model = self._tars_model
+		if not model:
+			if not model_path:
+				if lang == 'ko':
+					model_path = os.path.join(META_MODEL_DIR, META_MODEL_BIN_KO)
+				else:  # english 취급
+					model_path = os.path.join(META_MODEL_DIR, META_MODEL_BIN_EN)
 
-		# TODO: 추가 klue task, 한글 task
-		# data = MultiCorpus(corpora, name='klue', sample_missing_splits=sample_missing_splits)
+			model = TARSClassifier.load(model_path)
+			self._tars_model = model
+			self._model_path = model_path
+			self._lang = lang
+		return model
 
-		tars = TARSClassifier(
-			embeddings=embedding,
-		)
-
-		results = []
-		for c in corpora:
-			label_dict = c.make_label_dictionary(c.name)
-			tars.add_and_switch_to_new_task(
-				task_name=c.name,
-				label_dictionary=label_dict,
-				label_type=c.name,
-				multi_label=label_dict.multi_label,
-			)
-
-			# initialize the text classifier trainer with corpus
-			trainer = ModelTrainer(tars, c)
-
-			# train model
-			log_dir = self._output_path / 'tensorboard'/ c.name
-			log_dir.mkdir(parents=True, exist_ok=True)
-			result = trainer.train(
-				base_path=self._output_path / c.name,  # path to store the model artifacts
-				learning_rate=self._learning_rate, # use very small learning rate
-				optimizer=AdamW,
-				param_selection_mode=True,
-				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
-				patience=self._patience,
-				max_epochs=self._max_epochs,  # terminate after 10 epochs
-				train_with_dev=self._train_with_dev,
-				use_tensorboard=True,
-				tensorboard_log_dir=log_dir,
-			)
-			results.append(result)
-
-		self._tars_model = tars  # replace with fine tuned model
-		logger.info(f'fine tuning completed for corpora:{[c.name for c in corpora]}, results:{results}')
-		return results
+	def _identify_language(self, texts:List[str]):
+		lang = self._lang
+		if not lang:
+			langs, _ = labeler_utils.identify_language(texts)
+			lang = langs[0] if langs else 'en' #default
+			self._lang = lang
+		return lang
 
 	@timer
 	def fine_tuning(
@@ -173,8 +149,6 @@ class MetaLearner:
 			tag_column_name: str = 'tags',
 			task_name: str = None,
 	) -> Dict[str, str]:
-		tars = self._tars_model
-
 		texts = df[text_column_name].values.tolist()
 		tags = df[tag_column_name].values.tolist()
 		task_name = task_name or get_task_name(tags)
@@ -182,6 +156,9 @@ class MetaLearner:
 		tr = [Sentence(text).add_label(task_name, tag) for text, tag in zip(texts, tags)]
 		dataset = FlairDatapointDataset(tr)
 		corpus = Corpus(train=dataset, sample_missing_splits=False)
+
+		lang = self._identify_language(texts)
+		tars = self._load_model(model_path=self.model_path, lang=lang)
 
 		if task_name in tars.list_existing_tasks():
 			tars.switch_to_task(task_name)
@@ -216,7 +193,9 @@ class MetaLearner:
 			texts: List[str],
 			class_nm_list: List[str] = None,
 	) -> List[Label]:
-		tars = self._tars_model
+		lang = self._identify_language(texts)
+		tars = self._load_model(model_path=self.model_path, lang=lang)
+
 		batch = self._prediction_batch_size
 
 		sentences = [Sentence(text) for text in texts]
@@ -234,6 +213,7 @@ class MetaLearner:
 			class_nm_list: List[str],
 			target_column_nm: str,
 			source_data_fp: str,
+			tag_column_nm: str = None,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
 		input_path = os.path.join(WORKPLACE_PATH, source_data_fp)
@@ -242,33 +222,23 @@ class MetaLearner:
 
 		predictions = self._shot_learning(texts, class_nm_list)
 
-		# rst_df = pd.read_csv(output_path / 'zsl_rst_df.csv')
-
-		# TODO: 공구리 치기
-		# if accutuning_lb.is_confident_in_label_prediction(predictions, class_nm_list):
-		# 	# sample 결과를 가지고 FSL하여 Fine-tuning 후 저장
-		# 	sample_df = labeler_utils.sampling(rst_df, DEFAULT_TAG_COLUMN_NAME, class_nm_list,
-		# 									   n_samples=self._n_samples)
-		# 	ret = fsl(rst_df, 'stcs', sample_df, 'stcs', 'tags', output_path, conf_path)
-		# 	rst_df = pd.read_csv(output_path / 'fsl_rst_df.csv')
-		# 	ret['fine_tuned_model'] = fine_tuning(output_path, rst_df)
-
 		return {
 			'text_name': target_column_nm,
 			'texts': texts,
-			'tag_name': target_column_nm,
+			'tag_name': tag_column_nm,
 			'predictions': predictions,  # value만, score 제외
 		}
 
 	@timer
 	def few_shot_learning(
 			self,
-			target_column_nm,
-			source_data_fp,
-			samples_target_column_nm,
-			samples_tag_column_nm,
-			samples_fp,
-			correct,
+			target_column_nm: str,
+			source_data_fp: str,
+			samples_target_column_nm: str,
+			samples_tag_column_nm: str,
+			samples_fp: str,
+			correct: bool,
+			tag_column_nm: str = None,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
 
@@ -294,15 +264,13 @@ class MetaLearner:
 		return {
 			'text_name': target_column_nm,
 			'texts': texts,
-			'tag_name': DEFAULT_TAG_COLUMN_NAME,
+			'tag_name': tag_column_nm,
 			'predictions': predictions,  # value만, score 제외
 		}
 
 	@timer
 	def label_predict(
 			self,
-			bulk_output_fp,
-			fine_tuned_model_fp,
 			class_nm_list,
 			target_column_nm,
 			source_data_fp,
@@ -316,22 +284,6 @@ class MetaLearner:
 		)
 		return result
 
-	# command = 'python /code/accutuning_lb/zsl_predict.py --conf_path %s --model_path %s --output_fp %s' % (
-	# 	conf_path, fine_tuned_model_fp, bulk_output_fp)
-	# process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-	# process.wait()
-	#
-	# end_t = datetime.datetime.now()
-	#
-	# elapsed_time = end_t - start_t
-	# logger.info(f'Labeling predict - Finished, Elapsed time {elapsed_time}')
-	#
-	# return {
-	# 	"total_duration": elapsed_time.microseconds,
-	# 	"pred_duration": (end_t - mid_t).microseconds,
-	# 	"bulk_output_fp": str(bulk_output_fp),
-	# }
-
 	def save_model(self, file_path=None) -> str:
 		file_path = file_path or str(self._output_path / f'fine_tuned_{self._lang}.pt')
 		self._tars_model.save(model_file=file_path)
@@ -340,48 +292,41 @@ class MetaLearner:
 
 	def save_result(
 			self,
-			result_file: str,
+			result_csv_filename: str,
 			text_name: str,
 			texts: List[str],
 			tag_name: str,
-			predictions: List[str],
+			predictions: List[Label],
+			tags: List[Union[int, str]] = None,
+			model_path: str = None,
 	) -> Dict[str, str]:
 		output_path = self._output_path
+		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
+
 		# save results
-		result_df = pd.DataFrame({text_name: texts, tag_name: predictions})
-		result_df.to_csv(output_path / result_file, index=False)
-		labeler_utils.save_output_file(output_path / 'labels.pkl', predictions)
-		labeler_utils.save_output_file(output_path / 'clusters.pkl', list(set(predictions)))
+		result = {}
+		result[text_name] = texts
+		if tags:  # gold labels
+			result[tag_name] = tags
 
-		# TODO: save model location
-		output_location = {
-			'labels': str((output_path / 'labels.pkl').relative_to(WORKPLACE_PATH)),
-			'clusters': str((output_path / 'clusters.pkl').relative_to(WORKPLACE_PATH)),
-			'fine_tuned_model': self.save_model()
+		p_labels = [label.value for label in predictions]
+		p_scores = [label.score for label in predictions]
+		result[f'{tag_name}_predicted'] = p_labels
+		result['confidence'] = p_scores
+
+		result_df = pd.DataFrame(result)
+		result_df.to_csv(output_path / result_csv_filename, index=False)
+
+		labels_path = save_output_file(output_path / 'labels.pkl', predictions)
+		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(p_labels)))
+
+		output_path_info = {
+			'labels': labels_path,
+			'clusters': clusters_path,
+			'fine_tuned_model': model_path,
 		}
-
 		# save output location
 		(output_path / 'output.json').write_text(
-			json.dumps(output_location)
+			json.dumps(output_path_info)
 		)
-		return output_location
-
-
-if __name__ == "__main__":
-	# meta = MetaLearner(
-	# 	model_path=None,  # base learning
-	# 	max_epochs=3,
-	# 	mini_batch_size=1,
-	# 	train_with_dev=True
-	# )
-	# result = meta.base_learning(down_sample=0.001, sample_missing_splits=True)
-
-	meta = MetaLearner(
-		model_path=None,  # base learning
-		max_epochs=30,
-		mini_batch_size=32,
-		train_with_dev=True
-	)
-	result = meta.base_learning(down_sample=0.3)
-	path = meta.save_model()
-	print(path)
+		return output_path_info
