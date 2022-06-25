@@ -31,7 +31,7 @@ class TestBERTVectorizer(TestCase):
 		X = self.df
 		self.embedder.fit(X)
 		print(f'\nvocab lenghth:{self.embedder.embedding_length}')
-		assert self.embedder.embedding_length == 768
+		assert self.embedder.embedding_length == 512
 
 	def test_transform(self):
 		X = self.df
@@ -39,13 +39,13 @@ class TestBERTVectorizer(TestCase):
 		# print(f'vector:{vec}')
 		print(f'vector.shape:{vec.shape}')
 		# assert vec.shape[1] == 9994
-		assert vec.shape[1] == 768
+		assert vec.shape[1] == 512 + 2
 
 	def test_fit_transform(self):
 		X = self.df
 		vec = self.embedder.fit_transform(X)
 		print(f'\nvocab lenghth:{self.embedder.embedding_length}')
 		# assert self.embedder.embedding_length == 9994
-		assert self.embedder.embedding_length == 74
+		assert self.embedder.embedding_length == 512
 		print(f'vector:{vec}')
 		print(f'vector.shape:{vec.shape}')
