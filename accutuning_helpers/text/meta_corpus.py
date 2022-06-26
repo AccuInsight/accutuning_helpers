@@ -1,14 +1,15 @@
 import logging
-from typing import Dict, List, Literal
+from typing import Dict, List
 
 import datasets
-from accutuning_helpers.text.meta_learning import MetaLearner
 from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
 from torch.optim import AdamW
+
+from accutuning_helpers.text.meta_learning import MetaLearner
 
 logger = logging.getLogger()
 
@@ -234,8 +235,6 @@ class KoreanRestaurantReviewsDataset(HuggingfaceDataset):
 		return len(self._sentences)
 
 
-
-
 class BaseMetaLearner(MetaLearner):
 
 	def __init__(self, *args, **kwargs):
@@ -310,6 +309,6 @@ if __name__ == "__main__":
 		mini_batch_size=32,
 		train_with_dev=True
 	)
-	result = meta.base_learning(down_sample=0.3)
+	result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
 	path = meta.save_model()
 	print(path)
