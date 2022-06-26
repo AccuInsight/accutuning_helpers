@@ -149,7 +149,7 @@ class KlueStsDataset(HuggingfaceDataset):
 
 
 class PawsXDataset(HuggingfaceDataset):
-	dataset_args = ['PAWS-X', 'ko']
+	dataset_args = ['paws-x', 'ko']
 	task_name = 'paws-x'
 	label_name_map: Dict[int, str] = {
 		0: "전혀 다른 의미의 문장",
@@ -305,7 +305,7 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=30,
+		max_epochs=100,
 		mini_batch_size=32,
 		train_with_dev=True
 	)
