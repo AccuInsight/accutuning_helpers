@@ -196,7 +196,7 @@ class NaverSentimentMovieCommentsDataset(HuggingfaceDataset):
 		tags = [self.label_name_map[i.as_py()] for i in dataset.data['label']]
 		self._sentences: List[Sentence] = [
 			Sentence(str(text), use_tokenizer=tokenizer).add_label(self.task_name, tag)
-			for text, tag in zip(texts, tags)
+			for text, tag in zip(texts, tags) if str(text).strip()
 		]
 
 	def __getitem__(self, index: int) -> Sentence:
