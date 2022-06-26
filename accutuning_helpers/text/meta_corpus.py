@@ -309,6 +309,6 @@ if __name__ == "__main__":
 		mini_batch_size=32,
 		train_with_dev=True
 	)
-	result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=1.0, embedding="kykim/electra-kor-base")
 	path = meta.save_model()
 	print(path)
