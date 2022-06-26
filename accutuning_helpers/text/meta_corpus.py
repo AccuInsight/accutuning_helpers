@@ -307,7 +307,7 @@ if __name__ == "__main__":
 		model_path=None,  # base learning
 		max_epochs=100,
 		mini_batch_size=8,
-		train_with_dev=True,
+		train_with_dev=False,
 	)
 	result = meta.base_learning(down_sample=1.0, embedding="kykim/electra-kor-base")
 	path = meta.save_model()
