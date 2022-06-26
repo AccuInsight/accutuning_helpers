@@ -305,10 +305,10 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=100,
+		max_epochs=40,
 		mini_batch_size=8,
 		train_with_dev=False,
 	)
-	result = meta.base_learning(down_sample=1.0, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=0.1, embedding="kykim/funnel-kor-base")
 	path = meta.save_model()
 	print(path)
