@@ -323,6 +323,6 @@ if __name__ == "__main__":
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=0.01, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
 	path = meta.save_model()
 	print(path)
