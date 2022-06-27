@@ -237,6 +237,7 @@ class BaseMetaLearner(MetaLearner):
 
 	def __init__(self, *args, **kwargs):
 		super(BaseMetaLearner, self).__init__(*args, **kwargs)
+		self._lang = 'ko'
 
 	def base_learning(
 			self,
