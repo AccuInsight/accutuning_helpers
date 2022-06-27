@@ -315,10 +315,10 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=10,
+		max_epochs=100,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=2e-5,
+		learning_rate=4e-5,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		train_with_dev=False,
