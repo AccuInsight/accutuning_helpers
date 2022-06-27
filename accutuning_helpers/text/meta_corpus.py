@@ -1,6 +1,7 @@
 import logging
-from typing import Dict, List
 from copy import copy
+from typing import Dict, List
+
 import datasets
 from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
@@ -266,7 +267,7 @@ class BaseMetaLearner(MetaLearner):
 		)
 
 		results = []
-		for i in range(1, corpus_iteration+1):
+		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
 				if 0 < down_sample < 1.0:
 					c = copy(c).downsample(percentage=down_sample)
@@ -287,13 +288,21 @@ class BaseMetaLearner(MetaLearner):
 						multi_label=label_dict.multi_label,
 					)
 
+				# optimizer_params
+				_params = list(tars.tars_model.named_parameters())
+				no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+				decay = 0.01
+				params = [
+					{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+					{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+				]
+
 				# initialize the text classifier trainer with corpus
 				trainer = ModelTrainer(tars, c)
-
 				result = trainer.train(
 					base_path=self._output_path / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
-					optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
+					optimizer=AdamW(params, lr=self._learning_rate, weight_decay=decay),
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
 					max_epochs=self._max_epochs,  # terminate after 10 epochs
@@ -314,7 +323,7 @@ if __name__ == "__main__":
 		max_epochs=10,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=2e-5,  # learning rate
+		learning_rate=5e-5,  # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
