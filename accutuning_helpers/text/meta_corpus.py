@@ -287,7 +287,6 @@ class BaseMetaLearner(MetaLearner):
 				base_path=self._output_path / c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
 				optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
-				param_selection_mode=True,
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
@@ -313,6 +312,6 @@ if __name__ == "__main__":
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=1.0, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
 	path = meta.save_model()
 	print(path)
