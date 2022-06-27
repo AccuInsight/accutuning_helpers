@@ -286,7 +286,7 @@ class BaseMetaLearner(MetaLearner):
 			result = trainer.train(
 				base_path=self._output_path / c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
-				optimizer=AdamW,
+				optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
 				param_selection_mode=True,
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
@@ -308,7 +308,7 @@ if __name__ == "__main__":
 		max_epochs=30,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=7e-5, # learning rate
+		learning_rate=0.001,  # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
