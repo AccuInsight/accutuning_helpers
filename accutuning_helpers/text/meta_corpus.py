@@ -305,14 +305,14 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=10,
+		max_epochs=30,
 		mini_batch_size=8,
 		mini_batch_chunk_size=4,
-		learning_rate=5e-4, # learning rate
+		learning_rate=7e-5, # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base")
-	# result = meta.base_learning(down_sample=1.0, embedding="klue/bert-base")
+	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=1.0, embedding="klue/bert-base")
 	path = meta.save_model()
 	print(path)
