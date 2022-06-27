@@ -306,9 +306,9 @@ if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
 		max_epochs=10,
-		mini_batch_size=16,
+		mini_batch_size=8,
 		mini_batch_chunk_size=4,
-		learning_rate=0.02,
+		learning_rate=5e-4, # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
