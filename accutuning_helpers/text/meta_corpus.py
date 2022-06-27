@@ -314,7 +314,7 @@ if __name__ == "__main__":
 		max_epochs=10,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=1e-4,  # learning rate
+		learning_rate=2e-5,  # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
