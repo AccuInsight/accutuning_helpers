@@ -11,7 +11,7 @@ from torch.optim import AdamW
 
 from accutuning_helpers.text.meta_learning import MetaLearner
 
-logger = logging.getLogger()
+logger = logging.getLogger('flair')
 
 
 def fetch(
@@ -271,7 +271,7 @@ class BaseMetaLearner(MetaLearner):
 				if 0 < down_sample < 1.0:
 					c = copy(c).downsample(percentage=down_sample)
 
-				logger.info(f" start training for corpus {c.name}, {i} -- iteration length:{len(c.train)}")
+				logger.info(f" start training for corpus {c.name}, {i} -- iteration")
 				# tensorboard log directory
 				log_dir = self._output_path / 'tensorboard' / f'{c.name}_{i}'
 				log_dir.mkdir(parents=True, exist_ok=True)
