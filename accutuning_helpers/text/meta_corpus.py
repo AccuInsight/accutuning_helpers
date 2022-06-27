@@ -1,14 +1,15 @@
 import logging
-from typing import Dict, List, Literal
+from typing import Dict, List
 
 import datasets
-from accutuning_helpers.text.meta_learning import MetaLearner
 from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
 from torch.optim import AdamW
+
+from accutuning_helpers.text.meta_learning import MetaLearner
 
 logger = logging.getLogger()
 
@@ -148,7 +149,7 @@ class KlueStsDataset(HuggingfaceDataset):
 
 
 class PawsXDataset(HuggingfaceDataset):
-	dataset_args = ['PAWS-X', 'ko']
+	dataset_args = ['paws-x', 'ko']
 	task_name = 'paws-x'
 	label_name_map: Dict[int, str] = {
 		0: "전혀 다른 의미의 문장",
@@ -194,8 +195,8 @@ class NaverSentimentMovieCommentsDataset(HuggingfaceDataset):
 		texts = dataset.data['document']
 		tags = [self.label_name_map[i.as_py()] for i in dataset.data['label']]
 		self._sentences: List[Sentence] = [
-			Sentence(str(text), use_tokenizer=tokenizer).add_label(self.task_name, tag)
-			for text, tag in zip(texts, tags)
+			Sentence(str(text).strip(), use_tokenizer=tokenizer).add_label(self.task_name, tag)
+			for text, tag in zip(texts, tags) if str(text).strip()
 		]
 
 	def __getitem__(self, index: int) -> Sentence:
@@ -234,8 +235,6 @@ class KoreanRestaurantReviewsDataset(HuggingfaceDataset):
 		return len(self._sentences)
 
 
-
-
 class BaseMetaLearner(MetaLearner):
 
 	def __init__(self, *args, **kwargs):
@@ -253,9 +252,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
-			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
-			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
-			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 		]
 
 		if 0 < down_sample < 1.0:
@@ -287,8 +286,7 @@ class BaseMetaLearner(MetaLearner):
 			result = trainer.train(
 				base_path=self._output_path / c.name,  # path to store the model artifacts
 				learning_rate=self._learning_rate,  # use very small learning rate
-				optimizer=AdamW,
-				param_selection_mode=True,
+				optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
 				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 				patience=self._patience,
 				max_epochs=self._max_epochs,  # terminate after 10 epochs
@@ -307,9 +305,13 @@ if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
 		max_epochs=30,
-		mini_batch_size=32,
-		train_with_dev=True
+		mini_batch_size=16,
+		mini_batch_chunk_size=4,
+		learning_rate=0.001,  # learning rate
+		train_with_dev=False,
 	)
-	result = meta.base_learning(down_sample=0.3)
+	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
+	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
 	path = meta.save_model()
 	print(path)

@@ -89,6 +89,7 @@ class MetaLearner:
 			model_path: Union[str, Path] = None,
 			learning_rate=5e-5,
 			mini_batch_size=16,
+			mini_batch_chunk_size=8,
 			patience=10,
 			max_epochs=1,
 			train_with_dev=True,
@@ -97,6 +98,7 @@ class MetaLearner:
 	):
 		self._learning_rate = learning_rate
 		self._mini_batch_size = mini_batch_size
+		self._mini_batch_chunk_size = mini_batch_chunk_size
 		self._patience = patience
 		self._max_epochs = max_epochs
 		self._train_with_dev = train_with_dev
@@ -181,6 +183,7 @@ class MetaLearner:
 			optimizer=AdamW,
 			param_selection_mode=True,
 			mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
+			mini_batch_chunk_size=self._mini_batch_chunk_size,
 			max_epochs=self._max_epochs,  # terminate after 10 epochs
 			train_with_dev=self._train_with_dev
 		)
