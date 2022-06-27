@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-
+from copy import copy
 import datasets
 from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
@@ -245,6 +245,7 @@ class BaseMetaLearner(MetaLearner):
 			embedding: str = 'klue/bert-base',
 			down_sample: float = 1.0,
 			sample_missing_splits=False,
+			corpus_iteration: int = 3,
 	):
 		assert not self._tars_model and 0 < down_sample <= 1
 
@@ -257,9 +258,6 @@ class BaseMetaLearner(MetaLearner):
 			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 		]
 
-		if 0 < down_sample < 1.0:
-			corpora = [c.downsample(percentage=down_sample) for c in corpora]
-
 		# TODO: 추가 klue task, 한글 task
 		# data = MultiCorpus(corpora, name='klue', sample_missing_splits=sample_missing_splits)
 
@@ -268,33 +266,41 @@ class BaseMetaLearner(MetaLearner):
 		)
 
 		results = []
-		for c in corpora:
-			label_dict = c.make_label_dictionary(c.name)
-			tars.add_and_switch_to_new_task(
-				task_name=c.name,
-				label_dictionary=label_dict,
-				label_type=c.name,
-				multi_label=label_dict.multi_label,
-			)
+		for i in range(corpus_iteration):
+			for c in corpora:
+				if 0 < down_sample < 1.0:
+					c = copy(c).downsample(percentage=down_sample)
 
-			# initialize the text classifier trainer with corpus
-			trainer = ModelTrainer(tars, c)
+				# tensorboard log directory
+				log_dir = self._output_path / 'tensorboard' / c.name
+				log_dir.mkdir(parents=True, exist_ok=True)
 
-			# train model
-			log_dir = self._output_path / 'tensorboard' / c.name
-			log_dir.mkdir(parents=True, exist_ok=True)
-			result = trainer.train(
-				base_path=self._output_path / c.name,  # path to store the model artifacts
-				learning_rate=self._learning_rate,  # use very small learning rate
-				optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
-				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
-				patience=self._patience,
-				max_epochs=self._max_epochs,  # terminate after 10 epochs
-				train_with_dev=self._train_with_dev,
-				use_tensorboard=True,
-				tensorboard_log_dir=log_dir,
-			)
-			results.append(result)
+				if c.name in tars.list_existing_tasks():
+					tars.switch_to_task(c.name)
+				else:
+					label_dict = c.make_label_dictionary(c.name)
+					tars.add_and_switch_to_new_task(
+						task_name=c.name,
+						label_dictionary=label_dict,
+						label_type=c.name,
+						multi_label=label_dict.multi_label,
+					)
+
+				# initialize the text classifier trainer with corpus
+				trainer = ModelTrainer(tars, c)
+
+				result = trainer.train(
+					base_path=self._output_path / c.name,  # path to store the model artifacts
+					learning_rate=self._learning_rate,  # use very small learning rate
+					optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
+					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
+					patience=self._patience,
+					max_epochs=self._max_epochs,  # terminate after 10 epochs
+					train_with_dev=self._train_with_dev,
+					use_tensorboard=True,
+					tensorboard_log_dir=log_dir,
+				)
+				results.append(result)
 
 		self._tars_model = tars  # replace with fine tuned model
 		logger.info(f'fine tuning completed for corpora:{[c.name for c in corpora]}, results:{results}')
