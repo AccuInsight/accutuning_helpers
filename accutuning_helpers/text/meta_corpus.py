@@ -306,7 +306,7 @@ if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
 		max_epochs=30,
-		mini_batch_size=8,
+		mini_batch_size=16,
 		mini_batch_chunk_size=4,
 		learning_rate=7e-5, # learning rate
 		train_with_dev=False,
