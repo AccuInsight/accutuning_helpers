@@ -266,13 +266,14 @@ class BaseMetaLearner(MetaLearner):
 		)
 
 		results = []
-		for i in range(corpus_iteration):
+		for i in range(1, corpus_iteration+1):
 			for c in corpora:
 				if 0 < down_sample < 1.0:
 					c = copy(c).downsample(percentage=down_sample)
 
+				logger.info(f" start training for corpus {c.name}, {i} -- iteration length:{len(c.train)}")
 				# tensorboard log directory
-				log_dir = self._output_path / 'tensorboard' / c.name
+				log_dir = self._output_path / 'tensorboard' / f'{c.name}_{i}'
 				log_dir.mkdir(parents=True, exist_ok=True)
 
 				if c.name in tars.list_existing_tasks():
@@ -310,10 +311,10 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=30,
+		max_epochs=10,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=0.001,  # learning rate
+		learning_rate=1e-4,  # learning rate
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
