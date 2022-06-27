@@ -252,9 +252,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
-			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
-			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
-			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 		]
 
 		if 0 < down_sample < 1.0:
