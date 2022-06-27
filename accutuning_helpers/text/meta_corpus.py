@@ -8,11 +8,11 @@ from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW
+from torch.optim.adam import Adam
 
 from accutuning_helpers.text.meta_learning import MetaLearner
 
-logger = logging.getLogger('flair')
+logger = logging.getLogger(__name__)
 
 
 def fetch(
@@ -33,14 +33,11 @@ def fetch(
 	# 2. convert
 	_train, _dev, _test = None, None, None
 	if train_:
-		_train = HuggingfaceDataset.__new__(cls)
-		_train.__init__(dataset=train_, tokenizer=tokenizer)
+		_train = cls(dataset=train_, tokenizer=tokenizer)
 	if dev_:
-		_dev = HuggingfaceDataset.__new__(cls)
-		_dev.__init__(dataset=dev_, tokenizer=tokenizer)
+		_dev = cls(dataset=dev_, tokenizer=tokenizer)
 	if test_:
-		_test = HuggingfaceDataset.__new__(cls)
-		_test.__init__(dataset=test_, tokenizer=tokenizer)
+		_test = cls(dataset=test_, tokenizer=tokenizer)
 
 	# 3. bag in the corpus
 	return Corpus(train=_train, dev=_dev, test=_test, name=corpus_args.get('name', _train.task_name), **corpus_args)
@@ -263,13 +260,13 @@ class BaseMetaLearner(MetaLearner):
 			embeddings=embedding,
 		)
 		# optimizer_params
-		_params = list(tars.tars_model.named_parameters())
-		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-		decay = 0.01
-		params = [
-			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
-			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-		]
+		# _params = list(tars.tars_model.named_parameters())
+		# no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		# decay = 0.01
+		# params = [
+		# 	{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+		# 	{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		# ]
 
 		results = []
 		for i in range(1, corpus_iteration + 1):
@@ -298,7 +295,8 @@ class BaseMetaLearner(MetaLearner):
 				result = trainer.train(
 					base_path=self._output_path / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
-					optimizer=AdamW(params, lr=self._learning_rate, weight_decay=decay),
+					# optimizer=AdamW(params, lr=self._learning_rate, weight_decay=decay),
+					optimizer=Adam,
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
 					max_epochs=self._max_epochs,  # terminate after 10 epochs
@@ -325,6 +323,6 @@ if __name__ == "__main__":
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.01, embedding="klue/bert-base")
 	path = meta.save_model()
 	print(path)
