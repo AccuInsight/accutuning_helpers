@@ -259,12 +259,17 @@ class BaseMetaLearner(MetaLearner):
 			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 		]
 
-		# TODO: 추가 klue task, 한글 task
-		# data = MultiCorpus(corpora, name='klue', sample_missing_splits=sample_missing_splits)
-
 		tars = TARSClassifier(
 			embeddings=embedding,
 		)
+		# optimizer_params
+		_params = list(tars.tars_model.named_parameters())
+		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		decay = 0.01
+		params = [
+			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		]
 
 		results = []
 		for i in range(1, corpus_iteration + 1):
@@ -287,15 +292,6 @@ class BaseMetaLearner(MetaLearner):
 						label_type=c.name,
 						multi_label=label_dict.multi_label,
 					)
-
-				# optimizer_params
-				_params = list(tars.tars_model.named_parameters())
-				no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-				decay = 0.01
-				params = [
-					{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
-					{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-				]
 
 				# initialize the text classifier trainer with corpus
 				trainer = ModelTrainer(tars, c)
@@ -323,7 +319,8 @@ if __name__ == "__main__":
 		max_epochs=10,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=5e-5,  # learning rate
+		# learning_rate=5e-5,  # learning rate
+		learning_rate=5e-3,
 		train_with_dev=False,
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
