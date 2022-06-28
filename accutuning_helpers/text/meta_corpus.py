@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import datasets
 from flair.data import Corpus, Sentence, Tokenizer
-from flair.datasets.document_classification import FlairDataset
+from flair.datasets.document_classification import FlairDataset, NEWSGROUPS
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
@@ -237,7 +237,7 @@ class BaseMetaLearner(MetaLearner):
 
 	def __init__(self, *args, **kwargs):
 		super(BaseMetaLearner, self).__init__(*args, **kwargs)
-		self._lang = 'ko'
+		self._lang = 'en'
 
 	def base_learning(
 			self,
@@ -255,6 +255,7 @@ class BaseMetaLearner(MetaLearner):
 			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
 			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
 			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			# NEWSGROUPS(sample_missing_splits=sample_missing_splits)
 		]
 
 		tars = TARSClassifier(
@@ -315,10 +316,10 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=100,
+		max_epochs=10,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=4e-5,
+		learning_rate=2e-3,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		train_with_dev=False,
@@ -326,5 +327,6 @@ if __name__ == "__main__":
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
 	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
+	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
 	path = meta.save_model()
 	print(path)
