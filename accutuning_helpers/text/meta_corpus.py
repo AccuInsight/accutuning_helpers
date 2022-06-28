@@ -235,9 +235,9 @@ class KoreanRestaurantReviewsDataset(HuggingfaceDataset):
 
 class BaseMetaLearner(MetaLearner):
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, base_language='ko', **kwargs):
 		super(BaseMetaLearner, self).__init__(*args, **kwargs)
-		self._lang = 'en'
+		self._lang = base_language
 
 	def base_learning(
 			self,
@@ -323,6 +323,7 @@ if __name__ == "__main__":
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		train_with_dev=False,
+		base_language='ko'
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
