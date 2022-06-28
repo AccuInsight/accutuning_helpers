@@ -298,7 +298,7 @@ class BaseMetaLearner(MetaLearner):
 					base_path=self._output_path / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
 					# optimizer=AdamW(params, lr=self._learning_rate, weight_decay=decay),
-					optimizer=Adam,
+					# optimizer=Adam, # default SGD
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
 					max_epochs=self._max_epochs,  # terminate after 10 epochs
