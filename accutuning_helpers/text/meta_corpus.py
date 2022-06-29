@@ -3,12 +3,13 @@ from copy import copy
 from typing import Dict, List
 
 import datasets
+import transformers
 from flair.data import Corpus, Sentence, Tokenizer
-from flair.datasets.document_classification import FlairDataset, NEWSGROUPS
+from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim.adam import Adam
+from torch.optim import AdamW
 
 from accutuning_helpers.text.meta_learning import MetaLearner
 
@@ -262,13 +263,14 @@ class BaseMetaLearner(MetaLearner):
 			embeddings=embedding,
 		)
 		# optimizer_params
-		# _params = list(tars.tars_model.named_parameters())
-		# no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-		# decay = 0.01
-		# params = [
-		# 	{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
-		# 	{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-		# ]
+		_params = list(tars.tars_model.named_parameters())
+		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		decay = 0.01
+		params = [
+			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		]
+		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
 
 		results = []
 		for i in range(1, corpus_iteration + 1):
@@ -293,14 +295,23 @@ class BaseMetaLearner(MetaLearner):
 					)
 
 				# initialize the text classifier trainer with corpus
+				total_steps = len(c.train) * self._max_epochs
+				scheduler = transformers.get_linear_schedule_with_warmup(
+					optimizer,
+					num_warmup_steps=self._warmup_fraction * total_steps,
+					num_training_steps=total_steps,
+				)
+
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
 					base_path=self._output_path / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
-					# optimizer=AdamW(params, lr=self._learning_rate, weight_decay=decay),
+					optimizer=optimizer,
+					scheduler=scheduler,
 					# optimizer=Adam, # default SGD
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
+					warmup_fraction=self._warmup_fraction,
 					max_epochs=self._max_epochs,  # terminate after 10 epochs
 					train_with_dev=self._train_with_dev,
 					use_tensorboard=True,
@@ -319,9 +330,10 @@ if __name__ == "__main__":
 		max_epochs=20,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=0.02,
+		learning_rate=2e-5,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
+		# learning_rate=0.02,
 		train_with_dev=False,
 		base_language='ko'
 	)
