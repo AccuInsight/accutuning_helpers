@@ -25,7 +25,7 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 		X_tr = X.copy()
 		for (col, typ) in self.datatype_pair_match:
 			try:
-				converting_col = X[col]
+				converting_col = X_tr[col]
 			except KeyError:
 				logger.critical(
 					'No such column name in the dataset - dtype convert'
