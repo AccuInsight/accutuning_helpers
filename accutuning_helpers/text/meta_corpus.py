@@ -331,7 +331,7 @@ if __name__ == "__main__":
 		max_epochs=20,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=2e-5,
+		learning_rate=1e-5,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		# learning_rate=0.02,
@@ -340,7 +340,7 @@ if __name__ == "__main__":
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
 	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
 	path = meta.save_model()
 	print(path)
