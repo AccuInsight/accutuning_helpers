@@ -90,6 +90,7 @@ class MetaLearner:
 			learning_rate=5e-5,
 			mini_batch_size=16,
 			mini_batch_chunk_size=8,
+			warmup_fraction=0.1,
 			patience=10,
 			max_epochs=1,
 			train_with_dev=True,
@@ -99,6 +100,7 @@ class MetaLearner:
 		self._learning_rate = learning_rate
 		self._mini_batch_size = mini_batch_size
 		self._mini_batch_chunk_size = mini_batch_chunk_size
+		self._warmup_fraction = warmup_fraction
 		self._patience = patience
 		self._max_epochs = max_epochs
 		self._train_with_dev = train_with_dev
@@ -106,7 +108,7 @@ class MetaLearner:
 		self._prediction_batch_size = prediction_batch_size
 		self._output_path = output_path or Path(WORKPLACE_PATH, 'output')
 		self._model_path = model_path
-		self._lang = None #lazy identify
+		self._lang = None  # lazy identify
 		self._tars_model: TARSClassifier = None  # lazy loading
 
 	@property
@@ -135,11 +137,11 @@ class MetaLearner:
 			self._lang = lang
 		return model
 
-	def _identify_language(self, texts:List[str]):
+	def _identify_language(self, texts: List[str]):
 		lang = self._lang
 		if not lang:
 			langs, _ = labeler_utils.identify_language(texts)
-			lang = langs[0] if langs else 'en' #default
+			lang = langs[0] if langs else 'en'  # default
 			self._lang = lang
 		return lang
 
@@ -195,10 +197,10 @@ class MetaLearner:
 			self,
 			texts: List[str],
 			class_nm_list: List[str] = None,
+			task_name: str = None,
 	) -> List[Label]:
 		lang = self._identify_language(texts)
 		tars = self._load_model(model_path=self.model_path, lang=lang)
-
 		batch = self._prediction_batch_size
 
 		sentences = [Sentence(text) for text in texts]
@@ -206,6 +208,8 @@ class MetaLearner:
 			for i in range(0, len(sentences), batch):
 				tars.predict_zero_shot(sentences[i: i + batch], class_nm_list)
 		else:
+			# switch to task
+
 			tars.predict(sentences, mini_batch_size=batch)
 
 		return to_predictions(sentences)
