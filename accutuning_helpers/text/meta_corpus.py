@@ -295,19 +295,19 @@ class BaseMetaLearner(MetaLearner):
 					)
 
 				# initialize the text classifier trainer with corpus
-				total_steps = len(c.train) * self._max_epochs
-				scheduler = transformers.get_linear_schedule_with_warmup(
-					optimizer,
-					num_warmup_steps=self._warmup_fraction * total_steps,
-					num_training_steps=total_steps,
-				)
+				# total_steps = len(c.train) * self._max_epochs
+				# scheduler = transformers.get_linear_schedule_with_warmup(
+				# 	optimizer,
+				# 	num_warmup_steps=self._warmup_fraction * total_steps,
+				# 	num_training_steps=total_steps,
+				# )
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
 					base_path=self._output_path / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
 					optimizer=optimizer,
-					scheduler=scheduler,
+					# scheduler=scheduler,
 					# optimizer=Adam, # default SGD
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
