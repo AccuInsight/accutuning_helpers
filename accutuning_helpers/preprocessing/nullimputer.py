@@ -118,10 +118,11 @@ class Model_Imputer:
 ##########################################################################
 class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
     def __init__(self, impute_strategies):
-        self.impute_strategies = impute_strategies
+        self.columns_name = impute_strategies['columns_name']
+        self.impute_strategies = impute_strategies['impute_strategies']
 
     def fit(self, X, y=0, **fit_params):
-        self.strategies_dict = dict(zip(X.columns, self.impute_strategies))
+        self.strategies_dict = dict(zip(self.columns_name, self.impute_strategies))
         imputing_values = []
         for col in self.strategies_dict:
             try:
