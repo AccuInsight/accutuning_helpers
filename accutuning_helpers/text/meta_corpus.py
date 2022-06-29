@@ -254,9 +254,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 			# NEWSGROUPS(sample_missing_splits=sample_missing_splits)
 		]
 
@@ -340,7 +340,7 @@ if __name__ == "__main__":
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
 	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
 	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
 	path = meta.save_model()
 	print(path)
