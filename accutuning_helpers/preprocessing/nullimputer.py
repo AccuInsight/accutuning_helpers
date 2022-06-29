@@ -151,7 +151,7 @@ class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
                         val = imputing_col.min()
                 imputing_values.append(val)
         
-        self.imputing_dict = dict(zip(X.columns, imputing_values))
+        self.imputing_dict = dict(zip(self.columns_name, imputing_values))
         return self
 
     def transform(self, X, y=0):
