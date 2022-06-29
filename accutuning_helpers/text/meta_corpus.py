@@ -268,10 +268,8 @@ class BaseMetaLearner(MetaLearner):
 		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
 		decay = 0.01
 		params = [
-			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'lr': 0.01,
-			 'weight_decay': decay},
-			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'lr': self._learning_rate,
-			 'weight_decay': 0.0}
+			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
 		]
 		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
 
