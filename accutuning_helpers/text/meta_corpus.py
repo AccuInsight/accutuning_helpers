@@ -296,12 +296,12 @@ class BaseMetaLearner(MetaLearner):
 					)
 
 				# initialize the text classifier trainer with corpus
-				total_steps = math.ceil(len(c.train) / self._mini_batch_size) * self._max_epochs
-				scheduler = LinearSchedulerWithWarmup(
-					optimizer=optimizer,
-					num_train_steps=total_steps,
-					num_warmup_steps=self._warmup_fraction * total_steps,
-				)
+				# total_steps = math.ceil(len(c.train) / self._mini_batch_size) * self._max_epochs
+				# scheduler = LinearSchedulerWithWarmup(
+				# 	optimizer=optimizer,
+				# 	num_train_steps=total_steps,
+				# 	num_warmup_steps=self._warmup_fraction * total_steps,
+				# )
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
