@@ -10,7 +10,7 @@ from flair.models import TARSClassifier
 from flair.optim import LinearSchedulerWithWarmup
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW
+from torch.optim import AdamW, Adam
 
 from accutuning_helpers.text.meta_learning import MetaLearner
 
@@ -264,15 +264,15 @@ class BaseMetaLearner(MetaLearner):
 			embeddings=embedding,
 		)
 		# optimizer_params
-		_params = list(tars.tars_model.named_parameters())
-		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-		decay = 0.01
-		params = [
-			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
-			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-		]
-		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
-
+		# _params = list(tars.tars_model.named_parameters())
+		# no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		# decay = 0.01
+		# params = [
+		# 	{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+		# 	{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		# ]
+		# optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
+		optimizer = Adam
 		results = []
 		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
@@ -310,7 +310,7 @@ class BaseMetaLearner(MetaLearner):
 					# optimizer=AdamW,
 					# optimizer=Adam, # default SGD
 					optimizer=optimizer,
-					scheduler=scheduler,
+					# scheduler=scheduler,
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
 					warmup_fraction=self._warmup_fraction,
