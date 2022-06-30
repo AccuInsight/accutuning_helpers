@@ -282,7 +282,7 @@ class BaseMetaLearner(MetaLearner):
 
 				logger.info(f" start training for corpus {c.name}, {i} -- iteration")
 				# tensorboard log directory
-				log_dir = self._output_path / 'tensorboard' / f'{c.name}_{i}'
+				log_dir = self._output_path / 'tensorboard' / mmdd / f'{c.name}_{i}'
 				log_dir.mkdir(parents=True, exist_ok=True)
 
 				if c.name in tars.list_existing_tasks():
@@ -297,12 +297,12 @@ class BaseMetaLearner(MetaLearner):
 					)
 
 				# initialize the text classifier trainer with corpus
-				# total_steps = math.ceil(len(c.train) / self._mini_batch_size) * self._max_epochs
-				# scheduler = LinearSchedulerWithWarmup(
-				# 	optimizer=optimizer,
-				# 	num_train_steps=total_steps,
-				# 	num_warmup_steps=self._warmup_fraction * total_steps,
-				# )
+				total_steps = math.ceil(len(c.train) / self._mini_batch_size) * self._max_epochs
+				scheduler = LinearSchedulerWithWarmup(
+					optimizer=optimizer,
+					num_train_steps=total_steps,
+					num_warmup_steps=self._warmup_fraction * total_steps,
+				)
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
@@ -311,7 +311,7 @@ class BaseMetaLearner(MetaLearner):
 					# optimizer=AdamW,
 					# optimizer=Adam, # default SGD
 					optimizer=optimizer,
-					# scheduler=scheduler,
+					scheduler=scheduler,
 					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 					patience=self._patience,
 					warmup_fraction=self._warmup_fraction,
@@ -333,7 +333,8 @@ if __name__ == "__main__":
 		max_epochs=20,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=1e-4,
+		# learning_rate=1e-4,
+		learning_rate=7e-5,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		# learning_rate=0.02,
