@@ -117,11 +117,12 @@ class Model_Imputer:
 # transform에서 strategy에 해당하는 방법에 따라 결측값을 처리합니다. 
 ##########################################################################
 class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
-    def __init__(self, impute_strategies):
+    def __init__(self, columns_name, impute_strategies):
+        self.columns_name = columns_name
         self.impute_strategies = impute_strategies
 
     def fit(self, X, y=0, **fit_params):
-        self.strategies_dict = dict(zip(X.columns, self.impute_strategies))
+        self.strategies_dict = dict(zip(self.columns_name, self.impute_strategies))
         imputing_values = []
         for col in self.strategies_dict:
             try:
@@ -150,7 +151,7 @@ class AccutuningNullImputerBycol(BaseEstimator, TransformerMixin):
                         val = imputing_col.min()
                 imputing_values.append(val)
         
-        self.imputing_dict = dict(zip(X.columns, imputing_values))
+        self.imputing_dict = dict(zip(self.columns_name, imputing_values))
         return self
 
     def transform(self, X, y=0):
