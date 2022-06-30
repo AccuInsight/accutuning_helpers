@@ -207,16 +207,14 @@ class MetaLearner:
 	) -> List[Label]:
 		lang = self._identify_language(texts)
 		tars = self._load_model(model_path=self.model_path, lang=lang)
-		batch = self._prediction_batch_size
 
 		sentences = [Sentence(text) for text in texts]
 		if class_nm_list:  # zero shot
-			for i in range(0, len(sentences), batch):
-				tars.predict_zero_shot(sentences[i: i + batch], class_nm_list)
+			tars.predict_zero_shot(sentences, class_nm_list)
 		else:
-			# switch to task
-
-			tars.predict(sentences, mini_batch_size=batch)
+			# already tasks are added at the fine tuning time
+			tars.switch_to_task(task_name)
+			tars.predict(sentences, mini_batch_size=self._prediction_batch_size)
 
 		return to_predictions(sentences)
 
@@ -312,7 +310,7 @@ class MetaLearner:
 			predictions: List[Label],
 			tags: List[Union[int, str]] = None,
 			model_path: str = None,
-			**config_kwargs, #misc arguments
+			**config_kwargs,  # misc arguments
 	) -> Dict[str, str]:
 		output_path = self._output_path
 		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
@@ -338,7 +336,7 @@ class MetaLearner:
 			'labels': _relative_to_workspace(labels_path),
 			'clusters': _relative_to_workspace(clusters_path),
 			# 'fine_tuned_model': _relative_to_workspace(model_path),
-			'fine_tuned_model': model_path, # 절대 path /code/resources or /workspace 둘다 존재 가능
+			'fine_tuned_model': model_path,  # 절대 path /code/resources or /workspace 둘다 존재 가능
 		}
 
 		# save output location
