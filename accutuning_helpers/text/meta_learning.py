@@ -312,6 +312,7 @@ class MetaLearner:
 			predictions: List[Label],
 			tags: List[Union[int, str]] = None,
 			model_path: str = None,
+			**config_kwargs, #misc arguments
 	) -> Dict[str, str]:
 		output_path = self._output_path
 		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
