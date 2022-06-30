@@ -11,7 +11,7 @@ from flair.optim import LinearSchedulerWithWarmup
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
 from torch.optim import AdamW, Adam
-
+from datetime import datetime
 from accutuning_helpers.text.meta_learning import MetaLearner
 
 logger = logging.getLogger(__name__)
@@ -274,6 +274,7 @@ class BaseMetaLearner(MetaLearner):
 		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
 		# optimizer = Adam
 		results = []
+		mmdd = datetime.now().strftime("%m%d_%H%M")
 		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
 				if 0 < down_sample < 1.0:
@@ -305,7 +306,7 @@ class BaseMetaLearner(MetaLearner):
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
-					base_path=self._output_path / c.name,  # path to store the model artifacts
+					base_path=self._output_path / mmdd / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
 					# optimizer=AdamW,
 					# optimizer=Adam, # default SGD
