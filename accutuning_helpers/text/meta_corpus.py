@@ -334,7 +334,8 @@ if __name__ == "__main__":
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
 		# learning_rate=1e-4,
-		learning_rate=7e-5,
+		# learning_rate=7e-5,
+		learning_rate=1e-4,
 		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		# learning_rate=0.02,
