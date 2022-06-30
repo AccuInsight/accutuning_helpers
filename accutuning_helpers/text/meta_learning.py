@@ -223,7 +223,7 @@ class MetaLearner:
 			tag_column_nm: str = None,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
-		input_path = os.path.join(WORKPLACE_PATH, source_data_fp)
+		input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
 		target_df = labeler_utils.load(input_path)
 		texts = target_df[target_column_nm].values.tolist()
 
