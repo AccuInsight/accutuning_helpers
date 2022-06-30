@@ -49,10 +49,16 @@ def timer(fn):
 	return inner
 
 
-def save_output_file(filepath: Path, obj) -> str:
+def save_output_file(filepath: Path, obj) -> Union[str, Path]:
 	filepath.write_bytes(
 		pickle.dumps(obj)
 	)
+	return filepath
+
+
+def _relative_to_workspace(filepath: Union[str, Path]):
+	if isinstance(filepath, str):
+		filepath = Path(filepath)
 	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
@@ -328,10 +334,11 @@ class MetaLearner:
 		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(p_labels)))
 
 		output_path_info = {
-			'labels': labels_path,
-			'clusters': clusters_path,
-			'fine_tuned_model': model_path,
+			'labels': _relative_to_workspace(labels_path),
+			'clusters': _relative_to_workspace(clusters_path),
+			'fine_tuned_model': _relative_to_workspace(model_path),
 		}
+
 		# save output location
 		(output_path / 'output.json').write_text(
 			json.dumps(output_path_info)
