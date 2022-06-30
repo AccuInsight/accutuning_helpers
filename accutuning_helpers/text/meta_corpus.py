@@ -340,7 +340,7 @@ if __name__ == "__main__":
 		base_language='ko'
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
-	result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base")
 	# result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
 	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
 	path = meta.save_model()
