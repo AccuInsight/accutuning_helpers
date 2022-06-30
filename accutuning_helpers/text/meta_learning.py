@@ -337,7 +337,8 @@ class MetaLearner:
 		output_path_info = {
 			'labels': _relative_to_workspace(labels_path),
 			'clusters': _relative_to_workspace(clusters_path),
-			'fine_tuned_model': _relative_to_workspace(model_path),
+			# 'fine_tuned_model': _relative_to_workspace(model_path),
+			'fine_tuned_model': model_path, # 절대 path /code/resources or /workspace 둘다 존재 가능
 		}
 
 		# save output location
