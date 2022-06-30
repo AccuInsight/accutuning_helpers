@@ -264,15 +264,15 @@ class BaseMetaLearner(MetaLearner):
 			embeddings=embedding,
 		)
 		# optimizer_params
-		# _params = list(tars.tars_model.named_parameters())
-		# no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-		# decay = 0.01
-		# params = [
-		# 	{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
-		# 	{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-		# ]
-		# optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
-		optimizer = Adam
+		_params = list(tars.tars_model.named_parameters())
+		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		decay = 0.01
+		params = [
+			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		]
+		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
+		# optimizer = Adam
 		results = []
 		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
