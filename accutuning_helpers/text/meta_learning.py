@@ -98,7 +98,7 @@ class MetaLearner:
 			mini_batch_chunk_size=8,
 			warmup_fraction=0.1,
 			patience=10,
-			max_epochs=1,
+			max_epochs=10,
 			train_with_dev=True,
 			n_samples=5,
 			prediction_batch_size=16,
@@ -203,7 +203,6 @@ class MetaLearner:
 			self,
 			texts: List[str],
 			class_nm_list: List[str] = None,
-			task_name: str = None,
 	) -> List[Label]:
 		lang = self._identify_language(texts)
 		tars = self._load_model(model_path=self.model_path, lang=lang)
@@ -213,7 +212,6 @@ class MetaLearner:
 			tars.predict_zero_shot(sentences, class_nm_list)
 		else:
 			# already tasks are added at the fine tuning time
-			tars.switch_to_task(task_name)
 			tars.predict(sentences, mini_batch_size=self._prediction_batch_size)
 
 		return to_predictions(sentences)
