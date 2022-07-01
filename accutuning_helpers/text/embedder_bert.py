@@ -17,6 +17,7 @@ class BERTVectorizer(TokenEmbedderBase):
 			self,
 			feature_name,
 			bert_model_name='sentence-transformers/distiluse-base-multilingual-cased-v1',
+			batch_size=16,
 	):
 		super(BERTVectorizer, self).__init__(feature_name)
 
@@ -29,13 +30,25 @@ class BERTVectorizer(TokenEmbedderBase):
 		# 	pooling_mode_max_tokens=False)
 		# self.model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 		self.model = SentenceTransformer(bert_model_name)
+		self._batch_size = batch_size
 		self._tokenizer = _Tokenizer(delegator=self.model)
+		self._pool = self.model.start_multi_process_pool()
+		logger.debug(f"SentenceTransformer start multi_process_pool")
+
+	def __del__(self):
+		self.model.stop_multi_process_pool(pool=self._pool)
+		logger.debug('SentenceTransformer safely stop_multi_process_pool')
 
 	def fit(self, X, y=0, **fit_params):
 		return self
 
 	def encode(self, sentences: Iterable[str]) -> List[np.ndarray]:
-		return self.model.encode([str(s) for s in sentences])
+		# return self.model.encode(sentences, batch_size=self._batch_size)
+		return self.model.encode_multi_process(
+			[str(s) for s in sentences],
+			pool=self._pool,
+			batch_size=self._batch_size
+		)
 
 	@property
 	def tokenizer(self) -> Tokenizer:
@@ -87,3 +100,5 @@ class AccutuningLabeler(BERTVectorizer):
 				[X, tag_df],
 				axis=1
 			)
+
+
