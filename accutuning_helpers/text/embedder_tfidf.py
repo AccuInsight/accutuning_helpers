@@ -39,7 +39,7 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 
 	def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
 		corpus_embeddings = self.encode(X[self.feature_name].tolist())
-		corpus_columns = self._vectorizer.get_feature_names()
+		corpus_columns = [ f"{self.feature_name}_{v}" for v in self._vectorizer.get_feature_names()]
 		X = X.drop(self.feature_name, axis=1)
 
 		## BUGFIX df.concat(X, corpus_df, axis=1) 이 NaN을 일으켜 numpy로 concat후 X부분만 형변환 함
