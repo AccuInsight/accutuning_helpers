@@ -248,7 +248,6 @@ class BaseMetaLearner(MetaLearner):
 			down_sample: float = 1.0,
 			sample_missing_splits=False,
 			corpus_iteration: int = 3,
-			mmdd=None,  # datetime
 	):
 		assert not self._tars_model and 0 < down_sample <= 1
 
@@ -256,9 +255,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 			# NEWSGROUPS(sample_missing_splits=sample_missing_splits)
 		]
 
@@ -276,6 +275,7 @@ class BaseMetaLearner(MetaLearner):
 		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
 		# optimizer = Adam
 		results = []
+		mmdd = datetime.now().strftime("%m%d_%H%M")
 		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
 				if 0 < down_sample < 1.0:
@@ -285,11 +285,6 @@ class BaseMetaLearner(MetaLearner):
 				# tensorboard log directory
 				log_dir = self._output_path / 'tensorboard' / mmdd / f'{c.name}_{i}'
 				log_dir.mkdir(parents=True, exist_ok=True)
-
-				output_path = self._output_path / mmdd / c.name
-				model_path = output_path / 'best_model.pt'
-				if model_path.exists():
-					tars = TARSClassifier.load(model_path)
 
 				if c.name in tars.list_existing_tasks():
 					tars.switch_to_task(c.name)
@@ -312,7 +307,7 @@ class BaseMetaLearner(MetaLearner):
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
-					base_path=output_path,  # path to store the model artifacts
+					base_path=self._output_path / mmdd / c.name,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
 					# optimizer=AdamW,
 					# optimizer=Adam, # default SGD
@@ -347,14 +342,9 @@ if __name__ == "__main__":
 		train_with_dev=False,
 		base_language='ko'
 	)
-	mmdd = datetime.now().strftime("%m%d_%H%M")
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base", mmdd=mmdd)
+	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base")
 	# result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
 	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
-	model_path = meta._output_path / mmdd / KlueStsDataset.task_name / 'best_model.pt'
-
-	if model_path.exists():  # best model로 교체
-		meta._tars_model = TARSClassifier.load(model_path)
 	path = meta.save_model()
 	print(path)
