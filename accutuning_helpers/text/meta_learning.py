@@ -49,10 +49,16 @@ def timer(fn):
 	return inner
 
 
-def save_output_file(filepath: Path, obj) -> str:
+def save_output_file(filepath: Path, obj) -> Union[str, Path]:
 	filepath.write_bytes(
 		pickle.dumps(obj)
 	)
+	return filepath
+
+
+def _relative_to_workspace(filepath: Union[str, Path]):
+	if isinstance(filepath, str):
+		filepath = Path(filepath)
 	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
@@ -90,8 +96,9 @@ class MetaLearner:
 			learning_rate=5e-5,
 			mini_batch_size=16,
 			mini_batch_chunk_size=8,
+			warmup_fraction=0.1,
 			patience=10,
-			max_epochs=1,
+			max_epochs=10,
 			train_with_dev=True,
 			n_samples=5,
 			prediction_batch_size=16,
@@ -99,6 +106,7 @@ class MetaLearner:
 		self._learning_rate = learning_rate
 		self._mini_batch_size = mini_batch_size
 		self._mini_batch_chunk_size = mini_batch_chunk_size
+		self._warmup_fraction = warmup_fraction
 		self._patience = patience
 		self._max_epochs = max_epochs
 		self._train_with_dev = train_with_dev
@@ -106,7 +114,7 @@ class MetaLearner:
 		self._prediction_batch_size = prediction_batch_size
 		self._output_path = output_path or Path(WORKPLACE_PATH, 'output')
 		self._model_path = model_path
-		self._lang = None #lazy identify
+		self._lang = None  # lazy identify
 		self._tars_model: TARSClassifier = None  # lazy loading
 
 	@property
@@ -135,11 +143,11 @@ class MetaLearner:
 			self._lang = lang
 		return model
 
-	def _identify_language(self, texts:List[str]):
+	def _identify_language(self, texts: List[str]):
 		lang = self._lang
 		if not lang:
 			langs, _ = labeler_utils.identify_language(texts)
-			lang = langs[0] if langs else 'en' #default
+			lang = langs[0] if langs else 'en'  # default
 			self._lang = lang
 		return lang
 
@@ -199,14 +207,12 @@ class MetaLearner:
 		lang = self._identify_language(texts)
 		tars = self._load_model(model_path=self.model_path, lang=lang)
 
-		batch = self._prediction_batch_size
-
 		sentences = [Sentence(text) for text in texts]
 		if class_nm_list:  # zero shot
-			for i in range(0, len(sentences), batch):
-				tars.predict_zero_shot(sentences[i: i + batch], class_nm_list)
+			tars.predict_zero_shot(sentences, class_nm_list)
 		else:
-			tars.predict(sentences, mini_batch_size=batch)
+			# already tasks are added at the fine tuning time
+			tars.predict(sentences, mini_batch_size=self._prediction_batch_size)
 
 		return to_predictions(sentences)
 
@@ -219,7 +225,7 @@ class MetaLearner:
 			tag_column_nm: str = None,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
-		input_path = os.path.join(WORKPLACE_PATH, source_data_fp)
+		input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
 		target_df = labeler_utils.load(input_path)
 		texts = target_df[target_column_nm].values.tolist()
 
@@ -302,6 +308,7 @@ class MetaLearner:
 			predictions: List[Label],
 			tags: List[Union[int, str]] = None,
 			model_path: str = None,
+			**config_kwargs,  # misc arguments
 	) -> Dict[str, str]:
 		output_path = self._output_path
 		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
@@ -324,10 +331,12 @@ class MetaLearner:
 		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(p_labels)))
 
 		output_path_info = {
-			'labels': labels_path,
-			'clusters': clusters_path,
-			'fine_tuned_model': model_path,
+			'labels': _relative_to_workspace(labels_path),
+			'clusters': _relative_to_workspace(clusters_path),
+			# 'fine_tuned_model': _relative_to_workspace(model_path),
+			'fine_tuned_model': model_path,  # 절대 path /code/resources or /workspace 둘다 존재 가능
 		}
+
 		# save output location
 		(output_path / 'output.json').write_text(
 			json.dumps(output_path_info)

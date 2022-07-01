@@ -1,17 +1,20 @@
 import logging
+import math
+from copy import copy
 from typing import Dict, List
 
 import datasets
 from flair.data import Corpus, Sentence, Tokenizer
 from flair.datasets.document_classification import FlairDataset
 from flair.models import TARSClassifier
+from flair.optim import LinearSchedulerWithWarmup
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW
-
+from torch.optim import AdamW, Adam
+from datetime import datetime
 from accutuning_helpers.text.meta_learning import MetaLearner
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def fetch(
@@ -32,14 +35,11 @@ def fetch(
 	# 2. convert
 	_train, _dev, _test = None, None, None
 	if train_:
-		_train = HuggingfaceDataset.__new__(cls)
-		_train.__init__(dataset=train_, tokenizer=tokenizer)
+		_train = cls(dataset=train_, tokenizer=tokenizer)
 	if dev_:
-		_dev = HuggingfaceDataset.__new__(cls)
-		_dev.__init__(dataset=dev_, tokenizer=tokenizer)
+		_dev = cls(dataset=dev_, tokenizer=tokenizer)
 	if test_:
-		_test = HuggingfaceDataset.__new__(cls)
-		_test.__init__(dataset=test_, tokenizer=tokenizer)
+		_test = cls(dataset=test_, tokenizer=tokenizer)
 
 	# 3. bag in the corpus
 	return Corpus(train=_train, dev=_dev, test=_test, name=corpus_args.get('name', _train.task_name), **corpus_args)
@@ -237,14 +237,16 @@ class KoreanRestaurantReviewsDataset(HuggingfaceDataset):
 
 class BaseMetaLearner(MetaLearner):
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, base_language='ko', **kwargs):
 		super(BaseMetaLearner, self).__init__(*args, **kwargs)
+		self._lang = base_language
 
 	def base_learning(
 			self,
 			embedding: str = 'klue/bert-base',
 			down_sample: float = 1.0,
 			sample_missing_splits=False,
+			corpus_iteration: int = 3,
 	):
 		assert not self._tars_model and 0 < down_sample <= 1
 
@@ -255,46 +257,70 @@ class BaseMetaLearner(MetaLearner):
 			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
 			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
 			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			# NEWSGROUPS(sample_missing_splits=sample_missing_splits)
 		]
-
-		if 0 < down_sample < 1.0:
-			corpora = [c.downsample(percentage=down_sample) for c in corpora]
-
-		# TODO: 추가 klue task, 한글 task
-		# data = MultiCorpus(corpora, name='klue', sample_missing_splits=sample_missing_splits)
 
 		tars = TARSClassifier(
 			embeddings=embedding,
 		)
-
+		# optimizer_params
+		_params = list(tars.tars_model.named_parameters())
+		no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+		decay = 0.01
+		params = [
+			{'params': [p for n, p in _params if not any(nd in n for nd in no_decay)], 'weight_decay': decay},
+			{'params': [p for n, p in _params if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+		]
+		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
+		# optimizer = Adam
 		results = []
-		for c in corpora:
-			label_dict = c.make_label_dictionary(c.name)
-			tars.add_and_switch_to_new_task(
-				task_name=c.name,
-				label_dictionary=label_dict,
-				label_type=c.name,
-				multi_label=label_dict.multi_label,
-			)
+		mmdd = datetime.now().strftime("%m%d_%H%M")
+		for i in range(1, corpus_iteration + 1):
+			for c in corpora:
+				if 0 < down_sample < 1.0:
+					c = copy(c).downsample(percentage=down_sample)
 
-			# initialize the text classifier trainer with corpus
-			trainer = ModelTrainer(tars, c)
+				logger.info(f" start training for corpus {c.name}, {i} -- iteration")
+				# tensorboard log directory
+				log_dir = self._output_path / 'tensorboard' / mmdd / f'{c.name}_{i}'
+				log_dir.mkdir(parents=True, exist_ok=True)
 
-			# train model
-			log_dir = self._output_path / 'tensorboard' / c.name
-			log_dir.mkdir(parents=True, exist_ok=True)
-			result = trainer.train(
-				base_path=self._output_path / c.name,  # path to store the model artifacts
-				learning_rate=self._learning_rate,  # use very small learning rate
-				optimizer=AdamW(tars.tars_model.parameters(), lr=self._learning_rate, weight_decay=0.01),
-				mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
-				patience=self._patience,
-				max_epochs=self._max_epochs,  # terminate after 10 epochs
-				train_with_dev=self._train_with_dev,
-				use_tensorboard=True,
-				tensorboard_log_dir=log_dir,
-			)
-			results.append(result)
+				if c.name in tars.list_existing_tasks():
+					tars.switch_to_task(c.name)
+				else:
+					label_dict = c.make_label_dictionary(c.name)
+					tars.add_and_switch_to_new_task(
+						task_name=c.name,
+						label_dictionary=label_dict,
+						label_type=c.name,
+						multi_label=label_dict.multi_label,
+					)
+
+				# initialize the text classifier trainer with corpus
+				total_steps = math.ceil(len(c.train) / self._mini_batch_size) * self._max_epochs
+				scheduler = LinearSchedulerWithWarmup(
+					optimizer=optimizer,
+					num_train_steps=total_steps,
+					num_warmup_steps=self._warmup_fraction * total_steps,
+				)
+
+				trainer = ModelTrainer(tars, c)
+				result = trainer.train(
+					base_path=self._output_path / mmdd / c.name,  # path to store the model artifacts
+					learning_rate=self._learning_rate,  # use very small learning rate
+					# optimizer=AdamW,
+					# optimizer=Adam, # default SGD
+					optimizer=optimizer,
+					scheduler=scheduler,
+					mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
+					patience=self._patience,
+					warmup_fraction=self._warmup_fraction,
+					max_epochs=self._max_epochs,  # terminate after 10 epochs
+					train_with_dev=self._train_with_dev,
+					use_tensorboard=True,
+					tensorboard_log_dir=log_dir,
+				)
+				results.append(result)
 
 		self._tars_model = tars  # replace with fine tuned model
 		logger.info(f'fine tuning completed for corpora:{[c.name for c in corpora]}, results:{results}')
@@ -304,14 +330,20 @@ class BaseMetaLearner(MetaLearner):
 if __name__ == "__main__":
 	meta = BaseMetaLearner(
 		model_path=None,  # base learning
-		max_epochs=30,
+		max_epochs=20,
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
-		learning_rate=0.001,  # learning rate
+		# learning_rate=1e-4,
+		# learning_rate=7e-5,
+		learning_rate=5e-5,  # learning rate
+		# learning_rate=5e-3,
+		# learning_rate=0.02,
 		train_with_dev=False,
+		base_language='ko'
 	)
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
-	# result = meta.base_learning(down_sample=0.3, embedding="kykim/electra-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="klue/bert-base")
+	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base")
+	# result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
+	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
 	path = meta.save_model()
 	print(path)
