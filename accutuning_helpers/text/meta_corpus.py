@@ -1,6 +1,7 @@
 import logging
 import math
 from copy import copy
+from datetime import datetime
 from typing import Dict, List
 
 import datasets
@@ -10,8 +11,8 @@ from flair.models import TARSClassifier
 from flair.optim import LinearSchedulerWithWarmup
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW, Adam
-from datetime import datetime
+from torch.optim import AdamW
+
 from accutuning_helpers.text.meta_learning import MetaLearner
 
 logger = logging.getLogger(__name__)
@@ -247,6 +248,7 @@ class BaseMetaLearner(MetaLearner):
 			down_sample: float = 1.0,
 			sample_missing_splits=False,
 			corpus_iteration: int = 3,
+			mmdd=None,  # datetime
 	):
 		assert not self._tars_model and 0 < down_sample <= 1
 
@@ -274,7 +276,6 @@ class BaseMetaLearner(MetaLearner):
 		optimizer = AdamW(params, lr=self._learning_rate, weight_decay=decay)
 		# optimizer = Adam
 		results = []
-		mmdd = datetime.now().strftime("%m%d_%H%M")
 		for i in range(1, corpus_iteration + 1):
 			for c in corpora:
 				if 0 < down_sample < 1.0:
@@ -284,6 +285,11 @@ class BaseMetaLearner(MetaLearner):
 				# tensorboard log directory
 				log_dir = self._output_path / 'tensorboard' / mmdd / f'{c.name}_{i}'
 				log_dir.mkdir(parents=True, exist_ok=True)
+
+				output_path = self._output_path / mmdd / c.name
+				model_path = output_path / 'best_model.pt'
+				if model_path.exists():
+					tars = TARSClassifier.load(model_path)
 
 				if c.name in tars.list_existing_tasks():
 					tars.switch_to_task(c.name)
@@ -306,7 +312,7 @@ class BaseMetaLearner(MetaLearner):
 
 				trainer = ModelTrainer(tars, c)
 				result = trainer.train(
-					base_path=self._output_path / mmdd / c.name,  # path to store the model artifacts
+					base_path=output_path,  # path to store the model artifacts
 					learning_rate=self._learning_rate,  # use very small learning rate
 					# optimizer=AdamW,
 					# optimizer=Adam, # default SGD
@@ -334,16 +340,21 @@ if __name__ == "__main__":
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
 		# learning_rate=1e-4,
-		# learning_rate=7e-5,
-		learning_rate=5e-5,  # learning rate
+		learning_rate=7e-5,
+		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		# learning_rate=0.02,
 		train_with_dev=False,
 		base_language='ko'
 	)
+	mmdd = datetime.now().strftime("%m%d_%H%M")
 	# result = meta.base_learning(down_sample=1.0, embedding="kykim/bert-kor-base")
-	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base")
+	result = meta.base_learning(down_sample=0.1, embedding="kykim/electra-kor-base", mmdd=mmdd)
 	# result = meta.base_learning(down_sample=0.5, embedding="klue/bert-base")
 	# result = meta.base_learning(down_sample=0.1, embedding="bert-base-cased")
+	model_path = meta._output_path / mmdd / KlueStsDataset.task_name / 'best_model.pt'
+
+	if model_path.exists():  # best model로 교체
+		meta._tars_model = TARSClassifier.load(model_path)
 	path = meta.save_model()
 	print(path)
