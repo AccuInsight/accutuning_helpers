@@ -19,6 +19,8 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 			decode_error="replace",
 			lowercase=False,
 			min_df=10,  # configurable
+			ngram_range=(1,3),
+			max_features=500,
 			**vectorizer_params,
 	):
 		super(TfIdfTokenVectorizer, self).__init__(feature_name)
@@ -26,6 +28,8 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 			decode_error=decode_error,
 			min_df=min_df,
 			tokenizer=tokenizer,
+			ngram_range=ngram_range,
+			max_features=max_features,
 			**vectorizer_params,
 		)
 		self._tokenizer = tokenizer
