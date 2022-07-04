@@ -1,6 +1,7 @@
 import logging
 import math
 from copy import copy
+from datetime import datetime
 from typing import Dict, List
 
 import datasets
@@ -10,8 +11,8 @@ from flair.models import TARSClassifier
 from flair.optim import LinearSchedulerWithWarmup
 from flair.tokenization import SegtokTokenizer
 from flair.trainers import ModelTrainer
-from torch.optim import AdamW, Adam
-from datetime import datetime
+from torch.optim import AdamW
+
 from accutuning_helpers.text.meta_learning import MetaLearner
 
 logger = logging.getLogger(__name__)
@@ -254,9 +255,9 @@ class BaseMetaLearner(MetaLearner):
 			fetch(KlueYnatDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueNliDataset, sample_missing_splits=sample_missing_splits),
 			fetch(KlueStsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
-			# fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(PawsXDataset, sample_missing_splits=sample_missing_splits),
+			fetch(NaverSentimentMovieCommentsDataset, sample_missing_splits=sample_missing_splits),
+			fetch(KoreanRestaurantReviewsDataset, sample_missing_splits=sample_missing_splits),
 			# NEWSGROUPS(sample_missing_splits=sample_missing_splits)
 		]
 
@@ -334,8 +335,8 @@ if __name__ == "__main__":
 		mini_batch_size=16,
 		mini_batch_chunk_size=4,
 		# learning_rate=1e-4,
-		# learning_rate=7e-5,
-		learning_rate=5e-5,  # learning rate
+		learning_rate=7e-5,
+		# learning_rate=5e-5,  # learning rate
 		# learning_rate=5e-3,
 		# learning_rate=0.02,
 		train_with_dev=False,

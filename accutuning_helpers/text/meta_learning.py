@@ -327,7 +327,7 @@ class MetaLearner:
 		result_df = pd.DataFrame(result)
 		result_df.to_csv(output_path / result_csv_filename, index=False)
 
-		labels_path = save_output_file(output_path / 'labels.pkl', predictions)
+		labels_path = save_output_file(output_path / 'labels.pkl', (p_labels, p_scores))
 		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(p_labels)))
 
 		output_path_info = {
