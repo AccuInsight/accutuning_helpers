@@ -306,9 +306,10 @@ class MetaLearner:
 			texts: List[str],
 			tag_name: str,
 			predictions: List[Label],
+			execution_time: float,
 			tags: List[Union[int, str]] = None,
 			model_path: str = None,
-			**config_kwargs,  # misc arguments
+			**config_kwargs,  # misc arguments - ignored
 	) -> Dict[str, str]:
 		output_path = self._output_path
 		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
@@ -331,10 +332,12 @@ class MetaLearner:
 		clusters_path = save_output_file(output_path / 'clusters.pkl', list(set(p_labels)))
 
 		output_path_info = {
+			'output_fp': _relative_to_workspace(output_path / result_csv_filename),
 			'labels': _relative_to_workspace(labels_path),
 			'clusters': _relative_to_workspace(clusters_path),
 			# 'fine_tuned_model': _relative_to_workspace(model_path),
 			'fine_tuned_model': model_path,  # 절대 path /code/resources or /workspace 둘다 존재 가능
+			'execution_time': execution_time,
 		}
 
 		# save output location
