@@ -60,7 +60,7 @@ def _relative_to_workspace(filepath: Union[str, Path]):
 	if isinstance(filepath, str):
 		filepath = Path(filepath)
 	if str(filepath).startswith(META_MODEL_DIR):
-		return filepath.relative_to(META_MODEL_DIR)
+		return str(filepath.relative_to(META_MODEL_DIR))
 	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
