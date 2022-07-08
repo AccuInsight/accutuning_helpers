@@ -59,6 +59,8 @@ def save_output_file(filepath: Path, obj) -> Union[str, Path]:
 def _relative_to_workspace(filepath: Union[str, Path]):
 	if isinstance(filepath, str):
 		filepath = Path(filepath)
+	if str(filepath).startswith(META_MODEL_DIR):
+		return filepath.relative_to(META_MODEL_DIR)
 	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
@@ -335,8 +337,7 @@ class MetaLearner:
 			'output_fp': _relative_to_workspace(output_path / result_csv_filename),
 			'labels': _relative_to_workspace(labels_path),
 			'clusters': _relative_to_workspace(clusters_path),
-			# 'fine_tuned_model': _relative_to_workspace(model_path),
-			'fine_tuned_model': model_path,  # 절대 path /code/resources or /workspace 둘다 존재 가능
+			'fine_tuned_model': _relative_to_workspace(model_path),
 			'execution_time': execution_time,
 		}
 
