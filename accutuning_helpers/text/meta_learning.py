@@ -56,7 +56,7 @@ def save_output_file(filepath: Path, obj) -> Union[str, Path]:
 	return filepath
 
 
-def _relative_to_workspace(filepath: Union[str, Path]):
+def _relative_to_workspace(filepath: Union[str, Path]) -> str:
 	if isinstance(filepath, str):
 		filepath = Path(filepath)
 	if str(filepath).startswith(META_MODEL_DIR):
