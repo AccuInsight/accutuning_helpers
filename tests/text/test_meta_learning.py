@@ -11,7 +11,7 @@ class TestMetaLearner(TestCase):
 	def setUp(self) -> None:
 		self.meta = MetaLearner(
 			model_path=os.path.join(WORKPLACE_PATH, 'output/tars-electra-ko-v1.pt'),
-			max_epochs=10,
+			max_epochs=1,
 			train_with_dev=True,
 		)
 
