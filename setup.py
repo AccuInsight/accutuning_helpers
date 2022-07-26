@@ -25,5 +25,6 @@ setup(
         "datasets>=2.3.2", # Huggingface datasets
         "sentence-transformers>=2.2",
         # "protobuf==3.20.0",
+        "conllu==4.4.1" # conllu== 4.4.2 로 update되면서 flair 11.3에서 문제 발생하여 hotfix 조치함. flair version up시 삭제할 것
     ]
 )
