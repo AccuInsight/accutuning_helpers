@@ -57,6 +57,9 @@ def save_output_file(filepath: Path, obj) -> Union[str, Path]:
 
 
 def _relative_to_workspace(filepath: Union[str, Path]) -> str:
+	if filepath is None:
+		return filepath
+
 	if isinstance(filepath, str):
 		filepath = Path(filepath)
 	if str(filepath).startswith(META_MODEL_DIR):
@@ -95,6 +98,7 @@ class MetaLearner:
 			self,
 			output_path: Path = None,
 			model_path: Union[str, Path] = None,
+			tars_model: TARSClassifier = None,
 			learning_rate=5e-5,
 			mini_batch_size=16,
 			mini_batch_chunk_size=8,
@@ -117,7 +121,7 @@ class MetaLearner:
 		self._output_path = output_path or Path(WORKPLACE_PATH, 'output')
 		self._model_path = model_path
 		self._lang = None  # lazy identify
-		self._tars_model: TARSClassifier = None  # lazy loading
+		self._tars_model: TARSClassifier = tars_model  # lazy loading
 
 	@property
 	def model_path(self):
@@ -156,13 +160,17 @@ class MetaLearner:
 	@timer
 	def fine_tuning(
 			self,
-			df: pd.DataFrame,
-			text_column_name: str = 'stcs',
-			tag_column_name: str = 'tags',
+			df: pd.DataFrame = None,
+			text_column_name: str = None,
+			tag_column_name: str = None,
+			texts: List[str] = None,
+			tags: List[str] = None,
 			task_name: str = None,
 	) -> Dict[str, str]:
-		texts = df[text_column_name].values.tolist()
-		tags = df[tag_column_name].values.tolist()
+		assert df is not None or texts is not None, "df or text should be provided."
+
+		texts = texts or df[text_column_name].values.tolist()
+		tags = tags or df[tag_column_name].values.tolist()
 		task_name = task_name or get_task_name(tags)
 
 		tr = [Sentence(text).add_label(task_name, tag) for text, tag in zip(texts, tags)]
@@ -222,15 +230,18 @@ class MetaLearner:
 	def zero_shot_learning(
 			self,
 			class_nm_list: List[str],
-			target_column_nm: str,
-			source_data_fp: str,
+			target_column_nm: str = None,
+			source_data_fp: str = None,
+			texts: List[str] = None,
 			tag_column_nm: str = None,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
-		input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
-		target_df = labeler_utils.load(input_path)
-		texts = target_df[target_column_nm].values.tolist()
+		assert texts or source_data_fp, 'texts or source data file should be provided.'
 
+		if not texts:
+			input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
+			target_df = labeler_utils.load(input_path)
+			texts = target_df[target_column_nm].values.tolist()
 		predictions = self._shot_learning(texts, class_nm_list)
 
 		return {
@@ -238,31 +249,41 @@ class MetaLearner:
 			'texts': texts,
 			'tag_name': tag_column_nm,
 			'predictions': predictions,  # value만, score 제외
+			'class_nm_list': class_nm_list,
 		}
 
 	@timer
 	def few_shot_learning(
 			self,
-			target_column_nm: str,
-			source_data_fp: str,
-			samples_target_column_nm: str,
-			samples_tag_column_nm: str,
-			samples_fp: str,
-			correct: bool,
+			target_column_nm: str = None,
 			tag_column_nm: str = None,
+			source_data_fp: str = None,
+			texts: List[str] = None,
+			samples_target_column_nm: str = None,
+			samples_tag_column_nm: str = None,
+			samples_fp: str = None,
+			sample_texts: List[str] = None,
+			sample_tags: List[str] = None,
+			task_name: str = None,
+			correct: bool = False,
 			**config_kwargs,
 	) -> Dict[str, Union[str, List[str], List[Label]]]:
+		assert sample_texts or samples_fp, "sample texts or sample file should be provided."
 
 		# 1. fine tuning with samples
-		sample_path = os.path.join(WORKPLACE_HOME, samples_fp)
-		samples_df = labeler_utils.load(sample_path)
-		task_name = config_kwargs.get('task_name')
-		self.fine_tuning(samples_df, samples_target_column_nm, samples_tag_column_nm, task_name=task_name)
+		if sample_texts and sample_tags:
+			self.fine_tuning(texts=sample_texts, tags=sample_tags, task_name=task_name)
+		else:
+			sample_path = os.path.join(WORKPLACE_HOME, samples_fp)
+			samples_df = labeler_utils.load(sample_path)
+			self.fine_tuning(samples_df, samples_target_column_nm, samples_tag_column_nm, task_name=task_name)
 
 		# 2. predict whole data
-		input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
-		target_df = labeler_utils.load(input_path)
-		texts = target_df[target_column_nm].values.tolist()
+		assert texts or source_data_fp, 'texts or source data file should be provided.'
+		if not texts:
+			input_path = os.path.join(WORKPLACE_HOME, source_data_fp)
+			target_df = labeler_utils.load(input_path)
+			texts = target_df[target_column_nm].values.tolist()
 		predictions = self._shot_learning(texts, class_nm_list=None)
 
 		# 3. correct predictions if told to do so
