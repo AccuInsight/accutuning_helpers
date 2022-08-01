@@ -11,7 +11,7 @@ setup(
         "scipy==1.5.2",
         "joblib==1.1.0",
         "python-dateutil==2.8.2",
-        "ctgan==0.5.1",
+        "ctgan==0.4.3",
         "xgboost==1.5.0",
         "lightgbm>=2.3.1"
         # text added
