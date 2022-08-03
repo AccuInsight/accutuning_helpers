@@ -11,7 +11,7 @@ setup(
         "joblib==1.1.0",
         "scikit-learn==0.23.2",
         "xgboost==1.6.1",
-        "lightgbm==3.3.2"
+        "lightgbm==3.3.2",
         "ctgan==0.4.3",
         "python-dateutil==2.8.2",
         # text added
