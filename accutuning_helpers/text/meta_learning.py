@@ -4,14 +4,13 @@ import os
 import pickle
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 import pandas as pd
 from flair.data import Sentence, Corpus, Label
 from flair.datasets import FlairDatapointDataset
 from flair.models import TARSClassifier
 from flair.trainers import ModelTrainer
-from torch.optim.adamw import AdamW
 
 from accutuning_helpers.text import NOT_CONFIDENT_TAG
 from accutuning_helpers.text import utils as labeler_utils
@@ -24,7 +23,7 @@ META_MODEL_BIN_EN = 'tars-base-v8.pt'
 
 DEFAULT_TAG_COLUMN_NAME = 'gold_tags'
 WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
-WORKPLACE_PATH = os.environ['ACCUTUNING_WORKSPACE']
+WORKPLACE_PATH = os.environ.get('ACCUTUNING_WORKSPACE', '')  # None (empty string) 일수 있음. Runtime 쪽 요구 사항
 PREDICTION_SCORE_THRESHOLD = 0.7
 
 
@@ -67,7 +66,7 @@ def _relative_to_workspace(filepath: Union[str, Path]) -> str:
 	return str(filepath.relative_to(WORKPLACE_HOME))
 
 
-def to_predictions(sentences: List[Sentence]) -> List[Label]:
+def to_predictions(sentences: List[Sentence]) -> Tuple[List[str], List[str]]:
 	predictions = []
 	for sentence in sentences:
 		number_list = [label.score for label in sentence.labels]
@@ -79,8 +78,12 @@ def to_predictions(sentences: List[Sentence]) -> List[Label]:
 			predictions.append(max_label)
 		else:
 			not_confident = Label(sentence, value=NOT_CONFIDENT_TAG, score=0.5)
-			predictions.append(not_confident)  ## TODO: NOT Confident 분기 정교화?
-	return predictions
+			predictions.append(not_confident)
+
+	p_labels = [label.value for label in predictions]
+	p_scores = [label.score for label in predictions]
+
+	return p_labels, p_scores
 
 
 def get_task_name(labels: List[str]) -> str:
@@ -131,6 +134,10 @@ class MetaLearner:
 		"""
 		return self._model_path
 
+	@property
+	def model(self) -> TARSClassifier:
+		return self._tars_model
+
 	def _load_model(self, model_path: str = None, lang: str = 'ko'):
 		"""
 		언어가 결정되는 시점은 data를 읽은 이후라, 늦게 모델을 load 한다
@@ -168,6 +175,7 @@ class MetaLearner:
 			task_name: str = None,
 	) -> Dict[str, str]:
 		assert df is not None or texts is not None, "df or text should be provided."
+		assert WORKPLACE_PATH, "Workplace path should be provided in order to run fine tuning."
 
 		texts = texts or df[text_column_name].values.tolist()
 		tags = tags or df[tag_column_name].values.tolist()
@@ -198,7 +206,6 @@ class MetaLearner:
 		result = trainer.fine_tune(
 			base_path=self._output_path,  # path to store the model artifacts
 			learning_rate=self._learning_rate,  # use very small learning rate
-			optimizer=AdamW,
 			param_selection_mode=True,
 			mini_batch_size=self._mini_batch_size,  # small mini-batch size since corpus is tiny
 			mini_batch_chunk_size=self._mini_batch_chunk_size,
@@ -213,7 +220,7 @@ class MetaLearner:
 			self,
 			texts: List[str],
 			class_nm_list: List[str] = None,
-	) -> List[Label]:
+	) -> Tuple[List[str], List[str]]:
 		lang = self._identify_language(texts)
 		tars = self._load_model(model_path=self.model_path, lang=lang)
 
@@ -248,7 +255,7 @@ class MetaLearner:
 			'text_name': target_column_nm,
 			'texts': texts,
 			'tag_name': tag_column_nm,
-			'predictions': predictions,  # value만, score 제외
+			'predictions': predictions,  # (values, scores)
 			'class_nm_list': class_nm_list,
 		}
 
@@ -267,7 +274,7 @@ class MetaLearner:
 			task_name: str = None,
 			correct: bool = False,
 			**config_kwargs,
-	) -> Dict[str, Union[str, List[str], List[Label]]]:
+	) -> Dict[str, Union[str, List[str], Tuple[List[str], List[str]]]]:
 		assert sample_texts or samples_fp, "sample texts or sample file should be provided."
 
 		# 1. fine tuning with samples
@@ -297,7 +304,7 @@ class MetaLearner:
 			'text_name': target_column_nm,
 			'texts': texts,
 			'tag_name': tag_column_nm,
-			'predictions': predictions,  # value만, score 제외
+			'predictions': predictions,  # (values, scores)
 		}
 
 	@timer
@@ -307,7 +314,7 @@ class MetaLearner:
 			target_column_nm,
 			source_data_fp,
 			**config_kwargs,
-	) -> Dict[str, Union[str, List[str], List[Label]]]:
+	) -> Dict[str, Union[str, List[str], Tuple[List[str], List[str]]]]:
 		result: Dict = self.zero_shot_learning(
 			class_nm_list,
 			target_column_nm,
@@ -328,7 +335,7 @@ class MetaLearner:
 			text_name: str,
 			texts: List[str],
 			tag_name: str,
-			predictions: List[Label],
+			predictions: Tuple[List[str], List[str]],
 			execution_time: float,
 			tags: List[Union[int, str]] = None,
 			model_path: str = None,
@@ -338,13 +345,13 @@ class MetaLearner:
 		tag_name = tag_name or DEFAULT_TAG_COLUMN_NAME
 
 		# save results
-		result = {}
-		result[text_name] = texts
+		result = {text_name: texts}
 		if tags:  # gold labels
 			result[tag_name] = tags
 
-		p_labels = [label.value for label in predictions]
-		p_scores = [label.score for label in predictions]
+		# p_labels = [label.value for label in predictions]
+		# p_scores = [label.score for label in predictions]
+		p_labels, p_scores = predictions
 		result[f'{tag_name}_predicted'] = p_labels
 		result['confidence'] = p_scores
 
