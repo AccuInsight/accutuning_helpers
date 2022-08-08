@@ -23,7 +23,7 @@ META_MODEL_BIN_EN = 'tars-base-v8.pt'
 
 DEFAULT_TAG_COLUMN_NAME = 'gold_tags'
 WORKPLACE_HOME = os.environ.get('ACCUTUNING_WORKSPACE_ROOT', '/workspace')
-WORKPLACE_PATH = os.environ.get('ACCUTUNING_WORKSPACE')  # None 일수 있음. Runtime 쪽 요구 사항
+WORKPLACE_PATH = os.environ.get('ACCUTUNING_WORKSPACE', '')  # None (empty string) 일수 있음. Runtime 쪽 요구 사항
 PREDICTION_SCORE_THRESHOLD = 0.7
 
 
@@ -175,6 +175,7 @@ class MetaLearner:
 			task_name: str = None,
 	) -> Dict[str, str]:
 		assert df is not None or texts is not None, "df or text should be provided."
+		assert WORKPLACE_PATH, "Workplace path should be provided in order to run fine tuning."
 
 		texts = texts or df[text_column_name].values.tolist()
 		tags = tags or df[tag_column_name].values.tolist()
