@@ -3,6 +3,7 @@ import os
 from unittest import TestCase
 
 from accutuning_helpers.text import utils as labeler_utils
+from accutuning_helpers.text.meta_corpus import BaseMetaLearner
 from accutuning_helpers.text.meta_learning import MetaLearner, WORKPLACE_PATH, WORKPLACE_HOME
 
 
@@ -11,7 +12,7 @@ class TestMetaLearner(TestCase):
 	def setUp(self) -> None:
 		self.meta = MetaLearner(
 			model_path=os.path.join(WORKPLACE_PATH, 'output/tars-electra-ko-v1.pt'),
-			max_epochs=1,
+			max_epochs=10,
 			train_with_dev=True,
 		)
 
@@ -35,13 +36,15 @@ class TestMetaLearner(TestCase):
 		meta = self.meta
 		result = meta.label_predict(**conf)
 		result.pop('texts')  # too long to print
-		result['predictions'] = [p.value for p in result['predictions']]
+		# result['predictions'] = [p.value for p in result['predictions']]
+		values, scores = result['predictions']
 		print(json.dumps(result, indent=2, ensure_ascii=False), )
 		# assert all(map(lambda x: x in conf['class_nm_list'], result['predictions']))
 
 		input_path = os.path.join(WORKPLACE_PATH, conf['source_data_fp'])
 		target_df = labeler_utils.load(input_path)
-		gold, pred = target_df['tags'], result['predictions']
+		# gold, pred = target_df['tags'], result['predictions']
+		gold, pred = target_df['tags'], values
 		labeler_utils.evaluate(gold, pred)
 
 	def test_save_results(self):
@@ -71,8 +74,8 @@ class TestMetaLearner(TestCase):
 	def test_few_shot_learning(self):
 		conf = {
 			"random_seed": 42,
-			# "source_data_fp": "data/nnst_lt_10.csv",
-			"source_data_fp": "data/nnst_lt_1990.csv",
+			"source_data_fp": "data/nnst_lt_10.csv",
+			# "source_data_fp": "data/nnst_lt_1990.csv",
 			"samples_fp": "data/nnst_lt_10.csv",
 			"related_stcs": "",
 			"correct": False,
@@ -85,12 +88,14 @@ class TestMetaLearner(TestCase):
 		meta = self.meta
 		result = meta.few_shot_learning(**conf)
 		result.pop('texts')  # too long to print
-		result['predictions'] = [p.value for p in result['predictions']]
-		# print(json.dumps(result, indent=2, ensure_ascii=False),)
+		# result['predictions'] = [p.value for p in result['predictions']]
+		values, scores = result['predictions']
+		print(json.dumps(result, indent=2, ensure_ascii=False), )
 
 		input_path = os.path.join(WORKPLACE_PATH, conf['source_data_fp'])
 		target_df = labeler_utils.load(input_path)
-		gold, pred = target_df['tags'], result['predictions']
+		# gold, pred = target_df['tags'], result['predictions']
+		gold, pred = target_df['tags'], values  # (values, scores)
 		labeler_utils.evaluate(gold, pred)
 
 		## TODO: correct labels - 적용
@@ -118,20 +123,22 @@ class TestMetaLearner(TestCase):
 		meta = self.meta
 		result = meta.zero_shot_learning(**conf)
 		result.pop('texts')  # too long to print
-		result['predictions'] = [p.value for p in result['predictions']]
+		# result['predictions'] = [p.value for p in result['predictions']]
+		values, scores = result['predictions']
 		print(json.dumps(result, indent=2, ensure_ascii=False), )
 		# assert all(map(lambda x: x in conf['class_nm_list'], result['predictions']))
 
 		input_path = os.path.join(WORKPLACE_PATH, conf['source_data_fp'])
 		target_df = labeler_utils.load(input_path)
-		gold, pred = target_df['tags'], result['predictions']
+		# gold, pred = target_df['tags'], result['predictions']
+		gold, pred = target_df['tags'], values
 		labeler_utils.evaluate(gold, pred)
 
 
 class TestMetaBaseLearner(TestCase):
 
 	def setUp(self) -> None:
-		self.meta = MetaLearner(
+		self.meta = BaseMetaLearner(
 			model_path=None,
 			max_epochs=10,
 			train_with_dev=True,
