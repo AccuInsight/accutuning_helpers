@@ -37,7 +37,11 @@ class TfIdfTokenVectorizer(TokenEmbedderBase, DocumentEmbeddings):
 		self.name: str = "accutuning_text_tfidf"
 
 	def fit(self, df: pd.DataFrame, y=None) -> "TfIdfTokenVectorizer":
+		assert not df.empty, f'df is empty. Nothing to fit. feature_name: {self.feature_name}'
+
 		texts = df[self.feature_name].tolist()
+		assert texts, f"df[{self.feature_name}] is empty. Nothing to fit."
+
 		self._vectorizer.fit(texts, y=y)
 		return self
 
