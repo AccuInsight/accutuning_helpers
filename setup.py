@@ -5,7 +5,7 @@ setup(
     packages=find_namespace_packages(),
     include_package_data=True,
     install_requires=[
-        "numpy==1.19.5",
+        "numpy==1.22.0",
         "pandas==1.1.4",
         "scipy==1.5.2",
         "joblib==1.1.0",
