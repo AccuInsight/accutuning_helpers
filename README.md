@@ -2,7 +2,7 @@
 accutuning preprocessors, utils for public
 
 ### Prerequisite
-### 1. libgomp1
+### libgomp1
 - for Ubuntu
 ```
 $ apt-get install -y libgomp1
@@ -10,33 +10,6 @@ $ apt-get install -y libgomp1
 - for mac
 ```
 $ brew install libgomp1
-```
-
-### 2. Mecab (optional)
-for text users only  (ref: https://konlpy.org/ko/latest/install/)
-
-- for Ubuntu
-```
-$ sudo apt-get install curl git
-$ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
-```
-
-- for mac
-```
-$ bash <(curl -s https://raw.githubusercontent.com/konlpy/konlpy/master/scripts/mecab.sh)
-```
-
-- mecab 설치 환경이 방화벽 등으로 고립된 경우 수동 설치
-  - https://bitbucket.org/eunjeon/mecab-ko/downloads/
-  - 위 ref link에서 mecab-ko-dic-XX.tar.gz를 다운받고 해당 환경에 아래와 같이 수동으로 make할것
-```
-$ tar zxfv mecab-ko-dic-XX.tar.gz
-$ cd mecab-ko-dic-XX
-$ ./autogen.sh
-$ configure
-$ make
-$ su
-# make install
 ```
 
 ### Install

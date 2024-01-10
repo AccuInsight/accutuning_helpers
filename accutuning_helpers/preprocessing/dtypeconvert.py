@@ -14,11 +14,11 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 	def __init__(
 			self,
 			datatype_pair_match: List[Tuple[str, str]],
-			text_converter: TEXT_CONVERTER = 'tfidf'
+			# text_converter: TEXT_CONVERTER = 'tfidf'
 	):
 		self.datatype_pair_match: Tuple[str, str] = datatype_pair_match
-		self._converter = text_converter
-		self._vector_dict: Dict[str, "TokenEmbedderBase"] = dict()
+		# self._converter = text_converter
+		# self._vector_dict: Dict[str, "TokenEmbedderBase"] = dict()
 	def fit(self, X: pd.DataFrame, y=0, **fit_params) -> "AccutuningDtypeConvert":
 		return self
 	def transform(self, X: pd.DataFrame, y=0) -> pd.DataFrame:
@@ -31,14 +31,15 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 					'No such column name in the dataset - dtype convert'
 				)
 			else:
-				if typ == 'text':
-					ratio = 0.001
-					min_df = min(math.floor(len(converting_col) * ratio), 10)
-					vec = self._vectorizer_factory(col, min_df=min_df)
-					if vec.embedding_length == 0:  # not fitted
-						X_tr = vec.fit_transform(X_tr, y=y)
-					else:
-						X_tr = vec.transform(X_tr)
+				if typ == 'text':  # TODO: text 타입을 없앤 후 제거
+					pass
+					# ratio = 0.001
+					# min_df = min(math.floor(len(converting_col) * ratio), 10)
+					# vec = self._vectorizer_factory(col, min_df=min_df)
+					# if vec.embedding_length == 0:  # not fitted
+					# 	X_tr = vec.fit_transform(X_tr, y=y)
+					# else:
+					# 	X_tr = vec.transform(X_tr)
 				elif str(converting_col.dtype) != typ:
 					if typ == 'datetime64':
 						pass
@@ -53,17 +54,18 @@ class AccutuningDtypeConvert(BaseEstimator, TransformerMixin):
 								f'Failed to convert the datatype of column {col} to {str(typ)}. Set to default.'
 							)
 		return X_tr
-	def _vectorizer_factory(self, col: str, **params) -> "TokenEmbedderBase":
-		if col in self._vector_dict:
-			return self._vector_dict[col]
-		else:  # register vectorizer
-			if self._converter == 'tfidf':
-				from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
-				vec = TfIdfTokenVectorizer(feature_name=col, **params)
-			elif self._converter == 'BERT':
-				## FIXME - flair version 에 맞게 huggingface version 4로 version up
-				## FIXME - sentence transformer 기반 BERT vectorizer는 deprecated 될 예정
-				from accutuning_helpers.text.embedder_bert import BERTVectorizer
-				vec = BERTVectorizer(feature_name=col)
-			self._vector_dict[col] = vec
-			return vec
+	# def _vectorizer_factory(self, col: str, **params):
+	# 	return self._vector_dict[col]
+  		# if col in self._vector_dict:
+		# 	return self._vector_dict[col]
+		# else:  # register vectorizer
+		# 	if self._converter == 'tfidf':
+		# 		from accutuning_helpers.text.embedder_tfidf import TfIdfTokenVectorizer
+		# 		vec = TfIdfTokenVectorizer(feature_name=col, **params)
+		# 	elif self._converter == 'BERT':
+		# 		## FIXME - flair version 에 맞게 huggingface version 4로 version up
+		# 		## FIXME - sentence transformer 기반 BERT vectorizer는 deprecated 될 예정
+		# 		from accutuning_helpers.text.embedder_bert import BERTVectorizer
+		# 		vec = BERTVectorizer(feature_name=col)
+		# 	self._vector_dict[col] = vec
+		# 	return vec
